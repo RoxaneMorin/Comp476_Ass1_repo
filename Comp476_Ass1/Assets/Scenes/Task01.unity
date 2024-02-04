@@ -184,8 +184,8 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
-  orthographic: 0
-  orthographic size: 5
+  orthographic: 1
+  orthographic size: 20
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -654,13 +654,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxVelocity: 6
-  currentVelocity: {x: 0, y: 0, z: 0}
   myTarget: {fileID: 0}
+  previousTarget: {fileID: 0}
   targetReached: 0
+  useFeelers: 0
+  toAvoidInoffensive: []
+  toAvoidDanger: []
+  feelersCount: 3
+  feelersAngle: 45
+  feelersDistance: 3
+  YOnly: 1
   seekStopRadius: 0.5
   arriveStopRadius: 1.5
   arriveSlowRadius: 3
+  aheadDivider: 10
+  wanderInterval: 1
+  wanderDegreesDelta: 180
+  myFriendHero: {fileID: 0}
   myState: 0
+  previousState: 0
 --- !u!1 &1376339605
 GameObject:
   m_ObjectHideFlags: 0
@@ -674,7 +686,7 @@ GameObject:
   - component: {fileID: 1376339607}
   - component: {fileID: 1376339606}
   - component: {fileID: 1376339610}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Hero
   m_TagString: Hero
   m_Icon: {fileID: 0}
@@ -782,14 +794,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxVelocity: 6
-  currentVelocity: {x: 0, y: 0, z: 0}
   myTarget: {fileID: 1149951131}
+  previousTarget: {fileID: 0}
   targetReached: 0
+  useFeelers: 0
+  toAvoidInoffensive: []
+  toAvoidDanger: []
+  feelersCount: 3
+  feelersAngle: 45
+  feelersDistance: 3
+  YOnly: 1
   seekStopRadius: 1
   arriveStopRadius: 3
   arriveSlowRadius: 4
+  aheadDivider: 10
+  wanderInterval: 1
+  wanderDegreesDelta: 180
   myFortress: {fileID: 1716375989}
+  myFriendPrisoner: {fileID: 0}
   myState: 0
+  previousState: 0
+  isSneaking: 0
 --- !u!1 &1716375989
 GameObject:
   m_ObjectHideFlags: 0
@@ -804,9 +829,9 @@ GameObject:
   - component: {fileID: 1716375990}
   - component: {fileID: 1716375995}
   - component: {fileID: 1716375994}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Base
-  m_TagString: Untagged
+  m_TagString: Fortress
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -909,6 +934,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 676217cabcd37154faa992bb96f5994f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  myKillzone: {fileID: 0}
 --- !u!54 &1716375995
 Rigidbody:
   m_ObjectHideFlags: 0
