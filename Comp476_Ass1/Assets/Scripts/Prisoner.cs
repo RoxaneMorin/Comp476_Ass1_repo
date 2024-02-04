@@ -64,6 +64,9 @@ public class Prisoner : NPC
     // Built in
     void Start()
     {
+        // Dynamic variables.
+        defaultVelocity = maxVelocity;
+
         // Register the event listeners.
         OnTargetReached += TargetReached;
 

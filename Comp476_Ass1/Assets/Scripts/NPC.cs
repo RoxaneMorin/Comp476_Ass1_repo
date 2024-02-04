@@ -11,6 +11,7 @@ public class NPC : MonoBehaviour
     // General
     [Header("General NPC Variables")]
     [SerializeField] protected float maxVelocity = 6f;
+    [SerializeField] protected float defaultVelocity;
     protected Vector3 currentVelocity;
     public Vector3 CurrentVelocity { get { return currentVelocity; } }
 
@@ -21,8 +22,6 @@ public class NPC : MonoBehaviour
     // Obstacle detection.
     [Header("Obstacle Avoidance")]
     [SerializeField] protected bool useFeelers = true;
-    [SerializeField] protected String[] validFeelerTags = { "Obstacle" }; // Too greedy?
-
     [SerializeField] protected List<GameObject> toAvoidInoffensive;
     [SerializeField] protected List<GameObject> toAvoidDanger;
     [SerializeField] protected int feelersCount = 3;
@@ -283,7 +282,36 @@ public class NPC : MonoBehaviour
 
         return desiredVelocity;
     }
-    
+
+
+    // Misc
+    protected Prisoner FindClosestPrisoner()
+    {
+        GameObject[] potentialPrisoners = GameObject.FindGameObjectsWithTag("Prisoner");
+
+        if (potentialPrisoners.Length == 1)
+        {
+            return potentialPrisoners[0].GetComponent<Prisoner>();
+        }
+        else if (potentialPrisoners.Length > 0)
+        {
+            float closestDistance = Mathf.Infinity;
+            GameObject closestPotentialPrisoner = null;
+
+            foreach (GameObject potentialPrisoner in potentialPrisoners)
+            {
+                float distance = Vector3.Distance(gameObject.transform.position, potentialPrisoner.transform.position);
+                if (distance < closestDistance && potentialPrisoner.activeSelf == true)
+                {
+                    closestDistance = distance;
+                    closestPotentialPrisoner = potentialPrisoner;
+                }
+            }
+            return closestPotentialPrisoner.GetComponent<Prisoner>();
+        }
+        else // Will probably need to handle state changes.
+            return null;
+    }
 
 
     // Event handlers.

@@ -251,8 +251,6 @@ MonoBehaviour:
   previousTarget: {fileID: 0}
   targetReached: 0
   useFeelers: 1
-  validFeelerTags:
-  - Obstacle
   toAvoidInoffensive: []
   toAvoidDanger: []
   feelersCount: 3
@@ -1635,6 +1633,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameOverText: {fileID: 168972789}
+  heroScoreText: {fileID: 0}
+  heroScore: 0
 --- !u!1 &1149951131
 GameObject:
   m_ObjectHideFlags: 0
@@ -1760,8 +1760,6 @@ MonoBehaviour:
   previousTarget: {fileID: 0}
   targetReached: 0
   useFeelers: 1
-  validFeelerTags:
-  - Obstacle
   toAvoidInoffensive: []
   toAvoidDanger: []
   feelersCount: 3
@@ -1814,8 +1812,6 @@ MonoBehaviour:
   previousTarget: {fileID: 0}
   targetReached: 0
   useFeelers: 1
-  validFeelerTags:
-  - Obstacle
   toAvoidInoffensive: []
   toAvoidDanger: []
   feelersCount: 3
@@ -2050,25 +2046,25 @@ MonoBehaviour:
   previousTarget: {fileID: 0}
   targetReached: 0
   useFeelers: 1
-  validFeelerTags:
-  - Obstacle
   toAvoidInoffensive: []
   toAvoidDanger: []
   feelersCount: 3
   feelersAngle: 50
-  feelersDistance: 10
+  feelersDistance: 8
   YOnly: 1
   seekStopRadius: 1
-  arriveStopRadius: 3
+  arriveStopRadius: 2
   arriveSlowRadius: 4
   aheadDivider: 10
   wanderInterval: 1
   wanderDegreesDelta: 180
   myFortress: {fileID: 1716375989}
   myFriendPrisoner: {fileID: 0}
-  myState: 0
+  myState: 3
   previousState: 0
   stopEscapeTimeBuffer: 1
+  guardianHuntingVelocity: 3
+  defaultVelocity: 0
 --- !u!1 &1716375989
 GameObject:
   m_ObjectHideFlags: 0

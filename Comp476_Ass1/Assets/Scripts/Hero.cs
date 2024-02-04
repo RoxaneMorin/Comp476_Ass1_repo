@@ -29,7 +29,7 @@ public class Hero : NPC
     [Space]
 
     [SerializeField] private float stopEscapeTimeBuffer = 1f;
-    private float defaultVelocity;
+    [SerializeField] private float guardianHuntingVelocity = 3f;
 
 
 
@@ -64,25 +64,46 @@ public class Hero : NPC
 
         myTarget = myFortress;
         myState = Hero.HeroStates.FleeGuardian;
+
+        maxVelocity = guardianHuntingVelocity;
     }
     public void EscapedGuardian(GameObject targetGuardian)
     {
-        Debug.Log(string.Format("{0} is no longer fleeing.", this));
+        Debug.Log(string.Format("{0} is no longer fleeing {1}.", this, targetGuardian));
 
-        previousTarget = myTarget;
-        previousState = myState;
+        GameObject tempTarget = myTarget;
+        HeroStates tempState = myState;
 
         // How to handle them being deleted?
-        if (toAvoidDanger.Contains(targetGuardian)) // && !isSneaking)
+        if (toAvoidDanger.Contains(targetGuardian))
         {
             toAvoidDanger.Remove(targetGuardian);
         }
 
         if (!GuardiansInToAvoid())
         {
-            myTarget = myFriendPrisoner.gameObject;
-            myState = Hero.HeroStates.ReachPrisoner;
-        }        
+            Debug.Log("No longer fleeing anyone");
+
+            if (previousState == HeroStates.ReachPrisoner || previousState == HeroStates.ReachFortress)
+            {
+                myTarget = myFriendPrisoner.gameObject;
+                myState = Hero.HeroStates.ReachPrisoner;
+            }
+            else if (previousState == HeroStates.FleeGuardian)
+            {
+                HuntForGuardian();
+            }
+            else
+            {
+                myTarget = previousTarget;
+                myState = previousState;
+            }
+
+            previousTarget = tempTarget;
+            previousState = tempState;
+
+            maxVelocity = defaultVelocity;
+        }
     }
 
     public IEnumerator EscapedGuardianDelayed(GameObject targetGuardian)
@@ -91,43 +112,6 @@ public class Hero : NPC
 
         EscapedGuardian(targetGuardian);
     }
-
-    // Handle via feelers?
-    //public void SneakPastGuardian(GameObject targetGuardian)
-    //{
-    //    if (!isSneaking)
-    //    {
-    //        isSneaking = true;
-    //    }
-
-    //    if (!(myState == HeroStates.FleeGuardian && myTarget == targetGuardian)) // No need to avoid the guardian if the hero is already fleering them.
-    //    {
-    //        Debug.Log(string.Format("{0} is now sneaking past the guardian {1}.", this, targetGuardian));
-
-    //        if (!toAvoidDanger.Contains(targetGuardian))
-    //        {
-    //            toAvoidDanger.Add(targetGuardian);
-    //        }
-    //    }
-    //    else
-    //        Debug.Log(string.Format("{0} is already fleeing {1}.", this, targetGuardian));
-    //}
-    //public void StopSneak(GameObject targetGuardian)
-    //{
-    //    Debug.Log(string.Format("{0} is no longer sneaking.", this));
-
-    //    // Only remove the Guardian from the avoid list if we are not actively fleeing it.
-    //    if (myState != HeroStates.FleeGuardian && toAvoidDanger.Contains(targetGuardian))
-    //    {
-    //        toAvoidDanger.Remove(targetGuardian);
-    //    }
-
-    //    // Verify that we don't have other guardians to sneak by.
-    //    if (isSneaking)
-    //    {
-    //        isSneaking = false;
-    //    }
-    //}
 
     bool GuardiansInToAvoid()
     {
@@ -138,6 +122,68 @@ public class Hero : NPC
                 return true;
         }
         return false;
+    }
+
+    Guardian FindClosestGuardian()
+    {
+        GameObject[] potentialGuardians = GameObject.FindGameObjectsWithTag("Guardian");
+
+        if (potentialGuardians.Length == 1)
+        {
+            return potentialGuardians[0].GetComponent<Guardian>();
+        }
+        else if (potentialGuardians.Length > 1)
+        {
+            float closestDistance = Mathf.Infinity;
+            GameObject closestPotentialGuardian = null;
+
+            foreach (GameObject potentialGuardian in potentialGuardians)
+            {
+                float distance = Vector3.Distance(gameObject.transform.position, potentialGuardian.transform.position);
+                if (distance < closestDistance && potentialGuardian.activeInHierarchy == true)
+                {
+                    closestDistance = distance;
+                    closestPotentialGuardian = potentialGuardian;
+                }
+            }
+            return closestPotentialGuardian.GetComponent<Guardian>();
+        }
+        else
+            return null;
+    }
+
+    public void HuntForGuardian()
+    {
+        Guardian targetGuardian = myTarget.GetComponent<Guardian>();
+
+        if (!targetGuardian || !targetGuardian.gameObject.activeInHierarchy)
+        {
+            // Debug.Log(string.Format("{0} is hunting for a Guardian...", gameObject));
+            targetGuardian = FindClosestGuardian();
+        }
+
+        if (targetGuardian)
+        {
+            Debug.Log(string.Format("{0} is attempting to lure {1} to its doom...", gameObject, targetGuardian.gameObject));
+
+            myState = HeroStates.TauntGuardian;
+            myTarget = targetGuardian.myFoV.gameObject;
+        }
+        else // Move on to rescuing the prisoner.
+        {
+            if (!myFriendPrisoner)
+            {
+                myFriendPrisoner = FindClosestPrisoner();
+            }
+            myTarget = myFriendPrisoner.gameObject;
+            myState = HeroStates.ReachPrisoner;
+        }
+    }
+    public IEnumerator HuntForGuardianDelayed()
+    {
+        yield return new WaitForSeconds(stopEscapeTimeBuffer);
+
+        HuntForGuardian();
     }
 
 
@@ -179,12 +225,10 @@ public class Hero : NPC
             myState = HeroStates.ReachFortress;
         }
 
-        // Have we guided all attentive guardians to a fortress??
-        //else if (target.CompareTag("Fortress"))
-        //{
-        //    isSneaking = false;
-        //    targetReached = false;
-        //}
+        else if (target.CompareTag("Fortress"))
+        {
+            targetReached = false;
+        }
     }
 
     void GuardianDestroyed(GameObject dyingGardianGO)
@@ -195,20 +239,12 @@ public class Hero : NPC
             toAvoidDanger.Remove(dyingGardianGO);
 
             // Verify this works with multiple guardians.
-            if (myState == HeroStates.FleeGuardian)
+            if (myState == HeroStates.FleeGuardian || myState == HeroStates.TauntGuardian)
             {
-                previousTarget = myTarget;
-                previousState = myState;
+                targetReached = false;
+                maxVelocity = defaultVelocity;
 
-                myTarget = myFriendPrisoner.gameObject;
-                myState = Hero.HeroStates.ReachPrisoner;
-
-                // Was this the last Guardian alive?
-                if (!GuardiansInToAvoid())
-                {
-                    // isSneaking = false;
-                    targetReached = false;
-                }
+                StartCoroutine(HuntForGuardianDelayed());
             }
         }
     }
@@ -234,6 +270,15 @@ public class Hero : NPC
             SeekSteer,
             ArriveSteer
         };
+
+        // Find closest Prisoner.
+        myFriendPrisoner = FindClosestPrisoner();
+
+        // Find closest Guardian.
+        if (myState == HeroStates.TauntGuardian)
+        {
+            HuntForGuardian();
+        }
     }
 
     void Update()

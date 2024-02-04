@@ -15,7 +15,7 @@ public class Guardian : NPC
 
     // VARIABLES
     [Header("Guardian Variables")]
-    [SerializeField] protected GuardianFoV myFoV;
+    [SerializeField] public GuardianFoV myFoV;
     //[SerializeField] protected GuardianSneakZone mySneakZone;
     [SerializeField] protected GuardianCaptureZone myCaptureZone;
     [SerializeField] protected GameObject myPrisoner;
@@ -92,35 +92,6 @@ public class Guardian : NPC
         }
     }
 
-    //protected void SneakZoneEntered(GameObject enterer)
-    //{
-    //    if (enterer.CompareTag("Hero"))
-    //    {
-    //        Debug.Log(string.Format("A hero is attempting to sneak past {0}.", this.gameObject));
-
-    //        // Notify the hero it should sneak past the guard.
-    //        Hero perceivedHero = enterer.GetComponent<Hero>();
-    //        if (perceivedHero != null)
-    //        {
-    //            perceivedHero.SneakPastGuardian(gameObject);
-    //        }
-    //    }
-    //}
-    //protected void SneakZoneExited(GameObject exiter)
-    //{
-    //    if (exiter.CompareTag("Hero"))
-    //    {
-    //        Debug.Log(string.Format("{0} is no longer sneaking past {1}.", exiter, this.gameObject));
-
-    //        // Notify the hero to stop sneaking.
-    //        Hero perceivedHero = exiter.GetComponent<Hero>();
-    //        if (perceivedHero != null)
-    //        {
-    //            perceivedHero.StopSneak(gameObject);
-    //        }
-    //    }
-    //}
-
     protected void KillzoneEnter(GameObject enterer)
     {
         if (enterer == gameObject)
@@ -134,6 +105,9 @@ public class Guardian : NPC
     // Built in.
     void Start()
     {
+        // Dynamic variables.
+        defaultVelocity = maxVelocity;
+
         // Get components in children.
         myFoV = GetComponentInChildren<GuardianFoV>();
         //mySneakZone = GetComponentInChildren<GuardianSneakZone>();
@@ -147,7 +121,6 @@ public class Guardian : NPC
         //mySneakZone.OnSneakZoneEnter += SneakZoneEntered;
         //mySneakZone.OnSneakZoneExit += SneakZoneExited;
 
-
         // Furnish the possible move functions.
         moveFunctionsPerState = new Func<GameObject, Vector3>[]
         {
@@ -156,6 +129,10 @@ public class Guardian : NPC
             PursueSteer, // Pursue the hero. The target is the hero.
             ArriveSteer // Return to the prisoner. The target is the prisoner.
         };
+
+
+        // Find myPrisoner.
+        myPrisoner = FindClosestPrisoner().gameObject;
     }
 
     void Update()

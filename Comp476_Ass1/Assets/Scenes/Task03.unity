@@ -247,12 +247,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxVelocity: 3
+  defaultVelocity: 0
   myTarget: {fileID: 1149951131}
   previousTarget: {fileID: 0}
   targetReached: 0
   useFeelers: 1
-  validFeelerTags:
-  - Obstacle
   toAvoidInoffensive: []
   toAvoidDanger: []
   feelersCount: 3
@@ -1148,6 +1147,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameOverText: {fileID: 168972789}
+  heroScoreText: {fileID: 0}
+  heroScore: 0
 --- !u!1 &1149951131
 GameObject:
   m_ObjectHideFlags: 0
@@ -1269,12 +1270,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxVelocity: 6
+  defaultVelocity: 0
   myTarget: {fileID: 0}
   previousTarget: {fileID: 0}
   targetReached: 0
   useFeelers: 1
-  validFeelerTags:
-  - Obstacle
   toAvoidInoffensive: []
   toAvoidDanger: []
   feelersCount: 3
@@ -1411,12 +1411,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxVelocity: 6
+  defaultVelocity: 6
   myTarget: {fileID: 1149951131}
   previousTarget: {fileID: 0}
   targetReached: 0
   useFeelers: 1
-  validFeelerTags:
-  - Obstacle
   toAvoidInoffensive: []
   toAvoidDanger: []
   feelersCount: 3
@@ -1434,6 +1433,7 @@ MonoBehaviour:
   myState: 0
   previousState: 0
   stopEscapeTimeBuffer: 1
+  guardianHuntingVelocity: 6
 --- !u!1 &1716375989
 GameObject:
   m_ObjectHideFlags: 0
