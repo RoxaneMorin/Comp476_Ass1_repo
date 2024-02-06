@@ -654,15 +654,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxVelocity: 6
+  defaultVelocity: 0
   myTarget: {fileID: 0}
   previousTarget: {fileID: 0}
   targetReached: 0
   useFeelers: 0
-  toAvoidInoffensive: []
-  toAvoidDanger: []
+  toAvoidPassive: []
+  toAvoidActive: []
   feelersCount: 3
   feelersAngle: 45
   feelersDistance: 3
+  isCrossing: 0
+  previousWaypoint: {fileID: 0}
+  nextWaypoint: {fileID: 0}
   YOnly: 1
   seekStopRadius: 0.5
   arriveStopRadius: 1.5
@@ -794,15 +798,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxVelocity: 6
+  defaultVelocity: 0
   myTarget: {fileID: 1149951131}
   previousTarget: {fileID: 0}
   targetReached: 0
-  useFeelers: 0
-  toAvoidInoffensive: []
-  toAvoidDanger: []
-  feelersCount: 3
+  useFeelers: 1
+  toAvoidPassive: []
+  toAvoidActive: []
+  feelersCount: 5
   feelersAngle: 45
   feelersDistance: 3
+  isCrossing: 0
+  previousWaypoint: {fileID: 0}
+  nextWaypoint: {fileID: 0}
   YOnly: 1
   seekStopRadius: 1
   arriveStopRadius: 3
@@ -814,7 +822,8 @@ MonoBehaviour:
   myFriendPrisoner: {fileID: 0}
   myState: 0
   previousState: 0
-  isSneaking: 0
+  stopEscapeTimeBuffer: 1
+  guardianHuntingVelocity: 3
 --- !u!1 &1716375989
 GameObject:
   m_ObjectHideFlags: 0

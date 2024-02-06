@@ -9,6 +9,8 @@ TagManager:
   - FoV
   - Guardian
   - Fortress
+  - Waypoint
+  - Obstacle
   layers:
   - Default
   - TransparentFX

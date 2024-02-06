@@ -23,13 +23,17 @@ public class NPC : MonoBehaviour
     [Header("Obstacle Avoidance")]
     [SerializeField] protected bool useFeelers = true;
     [SerializeField] protected List<GameObject> toAvoidPassive;
+    public List<GameObject> ToAvoidPassive { get { return toAvoidPassive; } }
     [SerializeField] protected List<GameObject> toAvoidActive;
+    public List<GameObject> ToAvoidActive { get { return toAvoidActive; } }
     [SerializeField] protected int feelersCount = 3;
     [SerializeField] protected float feelersAngle = 45f;
     [SerializeField] protected float feelersDistance = 3f;
-    private float feelersAngleStep;
 
     // Waypoint system.
+    [Header("Waypoint System")]
+    [SerializeField] protected bool useWaypoints = true;
+    public bool isCrossing = false;
     public Waypoint previousWaypoint;
     public Waypoint nextWaypoint;
 
@@ -235,10 +239,9 @@ public class NPC : MonoBehaviour
             desiredVelocity += AvoidObstacles(toAvoidActive) * 1.5f;
         }
 
-        // To do: use waypoints.
-        if (nextWaypoint)
+        if (useWaypoints && nextWaypoint)
         {
-            desiredVelocity += SeekSteer(nextWaypoint.gameObject);
+            desiredVelocity += SeekSteer(nextWaypoint.gameObject) * 0.75f;
         }
 
         desiredVelocity = Vector3.ClampMagnitude(desiredVelocity, maxVelocity);
@@ -260,25 +263,30 @@ public class NPC : MonoBehaviour
         toAvoidPassive.Clear();
 
         // Prepare
+        // Move this to start?
         float angleStep = feelersAngle / (feelersCount - 1);
         float halfAngle = feelersAngle / 2;
+        int feelersMidCount = Mathf.CeilToInt(feelersCount / 2f);
 
         Vector3 startDirection = Quaternion.Euler(0, -halfAngle, 0) * transform.forward;
 
         for (int i = 0; i < feelersCount; i++)
         {
+            // Modulate the lenght of each feeler by position in the fan.
+            float localFeelerDistance = feelersDistance / (Math.Abs(feelersMidCount - (i+1)) / 2f + 1);
+
             Vector3 currentDirection = Quaternion.Euler(0, i * angleStep, 0) * startDirection;
             Ray ray = new Ray(transform.position, currentDirection);
             RaycastHit hit;
 
-            if (Physics.Raycast(ray, out hit, feelersDistance))
+            if (Physics.Raycast(ray, out hit, localFeelerDistance))
             {
-                // TO DO: only register the relevant objects.
+                // TO DO: only register the relevant objects, or sort objects in different categories.
                 toAvoidPassive.Add(hit.collider.gameObject);
             }
 
             // Visualize their little feelers uwu
-            Debug.DrawRay(ray.origin, ray.direction * feelersDistance, Color.white);
+            Debug.DrawRay(ray.origin, ray.direction * localFeelerDistance, Color.white);
         }
     }
     protected Vector3 AvoidObstacles(List<GameObject> obstacles)

@@ -16,7 +16,6 @@ public class Guardian : NPC
     // VARIABLES
     [Header("Guardian Variables")]
     [SerializeField] public GuardianFoV myFoV;
-    //[SerializeField] protected GuardianSneakZone mySneakZone;
     [SerializeField] protected GuardianCaptureZone myCaptureZone;
     [SerializeField] protected GameObject myPrisoner;
 
@@ -72,7 +71,7 @@ public class Guardian : NPC
     }
     protected void FoVExited(GameObject exiter)
     {
-        if (exiter.CompareTag("Hero"))
+        if (exiter.CompareTag("Hero") && !nextWaypoint)
         {
             Debug.Log(string.Format("{0} lost sight of a hero.", this.gameObject));
 
