@@ -57,9 +57,9 @@ public class Hero : NPC
         previousTarget = myTarget;
         previousState = myState;
 
-        if (!toAvoidDanger.Contains(targetGuardian))
+        if (!toAvoidActive.Contains(targetGuardian))
         {
-            toAvoidDanger.Add(targetGuardian);
+            toAvoidActive.Add(targetGuardian);
         }
 
         myTarget = myFortress;
@@ -75,9 +75,9 @@ public class Hero : NPC
         HeroStates tempState = myState;
 
         // How to handle them being deleted?
-        if (toAvoidDanger.Contains(targetGuardian))
+        if (toAvoidActive.Contains(targetGuardian))
         {
-            toAvoidDanger.Remove(targetGuardian);
+            toAvoidActive.Remove(targetGuardian);
         }
 
         if (!GuardiansInToAvoid())
@@ -115,7 +115,7 @@ public class Hero : NPC
 
     bool GuardiansInToAvoid()
     {
-        foreach (GameObject potentialGuardian in toAvoidDanger)
+        foreach (GameObject potentialGuardian in toAvoidActive)
         {
             // Getting the Guardian component would probably be safer, but more expensive.
             if (potentialGuardian.CompareTag("Guardian")) 
@@ -234,9 +234,9 @@ public class Hero : NPC
     void GuardianDestroyed(GameObject dyingGardianGO)
     {
         // Check if the guardian was in our list of obstacles to be avoided.
-        if (toAvoidDanger.Contains(dyingGardianGO))
+        if (toAvoidActive.Contains(dyingGardianGO))
         {
-            toAvoidDanger.Remove(dyingGardianGO);
+            toAvoidActive.Remove(dyingGardianGO);
 
             // Verify this works with multiple guardians.
             if (myState == HeroStates.FleeGuardian || myState == HeroStates.TauntGuardian)

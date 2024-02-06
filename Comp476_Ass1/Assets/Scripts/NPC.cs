@@ -22,12 +22,16 @@ public class NPC : MonoBehaviour
     // Obstacle detection.
     [Header("Obstacle Avoidance")]
     [SerializeField] protected bool useFeelers = true;
-    [SerializeField] protected List<GameObject> toAvoidInoffensive;
-    [SerializeField] protected List<GameObject> toAvoidDanger;
+    [SerializeField] protected List<GameObject> toAvoidPassive;
+    [SerializeField] protected List<GameObject> toAvoidActive;
     [SerializeField] protected int feelersCount = 3;
     [SerializeField] protected float feelersAngle = 45f;
     [SerializeField] protected float feelersDistance = 3f;
     private float feelersAngleStep;
+
+    // Waypoint system.
+    public Waypoint previousWaypoint;
+    public Waypoint nextWaypoint;
 
     // Rotation
     [Header("Rotation")]
@@ -226,9 +230,15 @@ public class NPC : MonoBehaviour
             if (useFeelers)
             {
                 CastFeelers();
-                desiredVelocity += AvoidObstacles(toAvoidInoffensive) * 0.5f;
+                desiredVelocity += AvoidObstacles(toAvoidPassive) * 0.75f;
             }
-            desiredVelocity += AvoidObstacles(toAvoidDanger) * 1.5f;
+            desiredVelocity += AvoidObstacles(toAvoidActive) * 1.5f;
+        }
+
+        // To do: use waypoints.
+        if (nextWaypoint)
+        {
+            desiredVelocity += SeekSteer(nextWaypoint.gameObject);
         }
 
         desiredVelocity = Vector3.ClampMagnitude(desiredVelocity, maxVelocity);
@@ -247,7 +257,7 @@ public class NPC : MonoBehaviour
     protected void CastFeelers() // Replace feelers by colliders if they are too greedy.
     {
         // Clear out the previous list of obstacles.
-        toAvoidInoffensive.Clear();
+        toAvoidPassive.Clear();
 
         // Prepare
         float angleStep = feelersAngle / (feelersCount - 1);
@@ -264,7 +274,7 @@ public class NPC : MonoBehaviour
             if (Physics.Raycast(ray, out hit, feelersDistance))
             {
                 // TO DO: only register the relevant objects.
-                toAvoidInoffensive.Add(hit.collider.gameObject);
+                toAvoidPassive.Add(hit.collider.gameObject);
             }
 
             // Visualize their little feelers uwu
