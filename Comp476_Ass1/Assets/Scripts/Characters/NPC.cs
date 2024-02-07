@@ -241,7 +241,7 @@ public class NPC : MonoBehaviour
 
         if (useWaypoints && nextWaypoint)
         {
-            desiredVelocity += SeekSteer(nextWaypoint.gameObject) * 0.75f;
+            desiredVelocity += SeekSteer(nextWaypoint.gameObject) * 0.5f;
         }
 
         desiredVelocity = Vector3.ClampMagnitude(desiredVelocity, maxVelocity);

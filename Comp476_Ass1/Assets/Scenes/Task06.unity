@@ -2932,6 +2932,7 @@ MonoBehaviour:
   feelersCount: 3
   feelersAngle: 45
   feelersDistance: 3
+  useWaypoints: 1
   isCrossing: 0
   previousWaypoint: {fileID: 0}
   nextWaypoint: {fileID: 0}
@@ -3159,6 +3160,7 @@ MonoBehaviour:
   feelersCount: 3
   feelersAngle: 50
   feelersDistance: 8
+  useWaypoints: 1
   isCrossing: 0
   previousWaypoint: {fileID: 0}
   nextWaypoint: {fileID: 0}
