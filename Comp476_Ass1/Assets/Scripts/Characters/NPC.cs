@@ -191,7 +191,7 @@ public class NPC : MonoBehaviour
     }
 
     // Wander
-    protected Vector3 WanderKinematic(GameObject dummy)
+    protected Vector3 WanderKinematic(GameObject dummy = null)
     {
         wanderTimer += Time.deltaTime;
 

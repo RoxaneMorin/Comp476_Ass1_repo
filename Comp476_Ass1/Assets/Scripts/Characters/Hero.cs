@@ -160,6 +160,8 @@ public class Hero : NPC
         {
             // Debug.Log(string.Format("{0} is hunting for a Guardian...", gameObject));
             targetGuardian = FindClosestGuardian();
+
+            // TO DO: use closest guardian fov instead.s
         }
 
         if (targetGuardian)
