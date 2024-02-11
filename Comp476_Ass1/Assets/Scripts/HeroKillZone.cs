@@ -6,12 +6,14 @@ using UnityEngine;
 public class HeroKillZone : MonoBehaviour
 {
     // VARIABLES
+    [SerializeField] private bool killPlayer = false;
 
 
 
     // EVENTS
     public delegate void EventCaptureZoneOnEnter(GameObject go);
-    public static event EventCaptureZoneOnEnter OnCaptureZoneEnter;
+    public static event EventCaptureZoneOnEnter OnHeroKillZoneEnter;
+    public static event EventCaptureZoneOnEnter OnPlayerKillZoneEnter;
 
 
 
@@ -31,7 +33,17 @@ public class HeroKillZone : MonoBehaviour
         {
             Debug.Log(string.Format("A hero has been caught! DUN DUN DUN"));
 
-            OnCaptureZoneEnter?.Invoke(other.gameObject);
+            OnHeroKillZoneEnter?.Invoke(other.gameObject);
+            return;
+        }
+
+        Player caughtPlayer = other.gameObject.GetComponent<Player>();
+        if (killPlayer && caughtPlayer)
+        {
+            Debug.Log("The player has hit a killzone!");
+
+            OnPlayerKillZoneEnter?.Invoke(other.gameObject);
+            return;
         }
     }
 }

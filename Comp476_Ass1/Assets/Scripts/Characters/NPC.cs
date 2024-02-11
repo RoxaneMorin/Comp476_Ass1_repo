@@ -10,6 +10,10 @@ public class NPC : MonoBehaviour
 
     // General
     [Header("General NPC Variables")]
+    [SerializeField] protected GameObject myDeathParticleSystem;
+
+    protected bool doMovement = true;
+    public bool DoMovement { get; set; }
     [SerializeField] protected float maxVelocity = 6f;
     [SerializeField] protected float defaultVelocity;
     protected Vector3 currentVelocity;
@@ -242,32 +246,35 @@ public class NPC : MonoBehaviour
     // Base Move function.
     virtual protected void Move(Vector3 desiredVelocity, bool avoidObstacles = true) 
     {
-        // Add weights to the different categories?
-        if (avoidObstacles)
+        if (doMovement)
         {
-            if (useFeelers)
+            // Add weights to the different categories?
+            if (avoidObstacles)
             {
-                CastFeelers();
-                desiredVelocity += AvoidObstacles(toAvoidPassive) * toAvoidPassiveWeight;
+                if (useFeelers)
+                {
+                    CastFeelers();
+                    desiredVelocity += AvoidObstacles(toAvoidPassive) * toAvoidPassiveWeight;
+                }
+                desiredVelocity += AvoidObstacles(toAvoidActive) * toAvoidActiveWeight;
             }
-            desiredVelocity += AvoidObstacles(toAvoidActive) * toAvoidActiveWeight;
+
+            if (useWaypoints && nextWaypoint)
+            {
+                desiredVelocity += SeekSteer(nextWaypoint.gameObject) * toNextWaypointWeigth;
+            }
+
+            desiredVelocity = Vector3.ClampMagnitude(desiredVelocity, maxVelocity);
+            currentVelocity = Vector3.Lerp(currentVelocity, desiredVelocity, Time.deltaTime);
+
+            // Try and avoid sinking into the ground.
+            currentVelocity.y = 0;
+
+            transform.position += currentVelocity * Time.deltaTime;
+
+            // Just face where you are going.
+            transform.rotation = Quaternion.Slerp(transform.rotation, transform.rotation * LookWhereYouAreGoingSteer(), Time.deltaTime);
         }
-
-        if (useWaypoints && nextWaypoint)
-        {
-            desiredVelocity += SeekSteer(nextWaypoint.gameObject) * toNextWaypointWeigth;
-        }
-
-        desiredVelocity = Vector3.ClampMagnitude(desiredVelocity, maxVelocity);
-        currentVelocity = Vector3.Lerp(currentVelocity, desiredVelocity, Time.deltaTime);
-
-        // Try and avoid sinking into the ground.
-        currentVelocity.y = 0;
-
-        transform.position += currentVelocity * Time.deltaTime;
-
-        // Just face where you are going.
-        transform.rotation = Quaternion.Slerp(transform.rotation, transform.rotation * LookWhereYouAreGoingSteer(), Time.deltaTime);
     }
 
     // Obstacle avoidance.
@@ -365,5 +372,12 @@ public class NPC : MonoBehaviour
     virtual protected void MyTargetReached(GameObject target)
     {
         Debug.Log(string.Format("{0} has reached its target, {1}.", this, target));
+    }
+
+
+    // Built in.
+    public void OnDisable()
+    {
+        GameObject deathParticles = Instantiate(myDeathParticleSystem, transform.position, Quaternion.identity);
     }
 }

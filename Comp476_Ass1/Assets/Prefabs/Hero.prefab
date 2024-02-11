@@ -122,6 +122,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9c863dd84ff3554b83355791259fa96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  myDeathParticleSystem: {fileID: 4334521299436995257, guid: 0a5f94b837006c0479c8b6370d680e1c,
+    type: 3}
   maxVelocity: 8
   defaultVelocity: 8
   myTarget: {fileID: 0}
@@ -149,6 +151,7 @@ MonoBehaviour:
   aheadDivider: 10
   wanderInterval: 1
   wanderDegreesDelta: 180
+  respawns: 0
   huntGuardians: 1
   myFortress: {fileID: 0}
   myFriendPrisoner: {fileID: 0}

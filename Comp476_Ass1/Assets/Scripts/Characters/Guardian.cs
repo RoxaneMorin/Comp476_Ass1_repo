@@ -116,7 +116,7 @@ public class Guardian : NPC
         myCaptureZone = GetComponentInChildren<HeroKillZone>();
 
         // Register the event listeners.
-        GuardianKillZone.OnKillZoneEnter += KillzoneEnter;
+        GuardianKillZone.OnGuardianKillZoneEnter += KillzoneEnter;
         OnTargetReached += MyTargetReached;
         myFoV.OnFoVEnter += FoVEntered;
         myFoV.OnFoVExit += FoVExited;

@@ -15,13 +15,17 @@ public class Hero : NPC
 
     // VARIABLES.
     [Header("Hero Variables")]
+    [SerializeField] private bool respawns = false;
+    public bool Respawns { get { return respawns; } }
     [SerializeField] private bool huntGuardians = true;
     [SerializeField] protected GameObject myFortress;
     [SerializeField] protected Prisoner myFriendPrisoner;
+    public Prisoner MyFriendPrisoner { get { return myFriendPrisoner; } }
     
     [Space]
 
     [SerializeField] private HeroStates myState = HeroStates.ReachPrisoner;
+    public HeroStates MyState { get { return myState; }}
     [SerializeField] private HeroStates previousState = HeroStates.ReachPrisoner;
 
     Func<GameObject, Vector3>[] moveFunctionsPerState; // Possible move functions, should follow the indexing of HeroStates.
@@ -343,14 +347,56 @@ public class Hero : NPC
         }
     }
 
-    void HeroKilled(GameObject killedHeroGO)
+    void HeroKilledByEnv(GameObject killedHeroGO)
     {
-        // To do: respawn the hero at the base if it was caught by the player.
-
         if (killedHeroGO == this.gameObject)
         {
-            this.gameObject.SetActive(false);
+            if (myFriendPrisoner != null)
+            {
+                myFriendPrisoner.StopRescue();
+            }
+
+            if (respawns)
+            {
+                GameObject deathParticles = Instantiate(myDeathParticleSystem, transform.position, Quaternion.identity);
+
+                doMovement = false;
+                Invoke("Respawn", 0.5f);
+            }
+            else
+            {
+                this.gameObject.SetActive(false);
+            }
         }
+    }
+    void HeroKilledByPlayer(GameObject killedHeroGO, bool dieForever)
+    {
+        if (killedHeroGO == this.gameObject)
+        {
+            if (myFriendPrisoner != null)
+            {
+                myFriendPrisoner.StopRescue();
+            }
+            // Might need to handle the prisoner differently.
+
+            if (!dieForever)
+            {
+                GameObject deathParticles = Instantiate(myDeathParticleSystem, transform.position, Quaternion.identity);
+
+                doMovement = false;
+                Invoke("Respawn", 0.5f);
+            }
+            else
+            {
+                this.gameObject.SetActive(false);
+            }
+        }
+    }
+    private void Respawn()
+    {
+        gameObject.transform.position = myFortress.transform.position;
+        doMovement = true;
+        ClearFlee();
     }
 
     void PrisonerReachedFortress(GameObject dummy)
@@ -370,8 +416,9 @@ public class Hero : NPC
 
         // Register the event listeners.
         OnTargetReached += MyTargetReached;
-        HeroKillZone.OnCaptureZoneEnter += HeroKilled;
-        GuardianKillZone.OnKillZoneEnter += GuardianDestroyed;
+        Player.OnPlayerCaughtHero += HeroKilledByPlayer;
+        HeroKillZone.OnHeroKillZoneEnter += HeroKilledByEnv;
+        GuardianKillZone.OnGuardianKillZoneEnter += GuardianDestroyed;
         Fortress.OnPrisonerFortressEnter += PrisonerReachedFortress;
 
         // Furnish the possible move functions.

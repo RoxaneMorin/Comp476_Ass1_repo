@@ -124,6 +124,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3fda5988937d3284aa289e1f1a12020c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  myDeathParticleSystem: {fileID: 6015813358376850953, guid: a08961115e592174bbbb458cee4f566a,
+    type: 3}
   maxVelocity: 4
   defaultVelocity: 0
   myTarget: {fileID: 0}
@@ -277,6 +279,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69d543135483e894cac72d93cba0a408, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  killPlayer: 0
 --- !u!54 &5175595606450408660
 Rigidbody:
   m_ObjectHideFlags: 0

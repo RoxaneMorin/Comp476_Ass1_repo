@@ -6,12 +6,18 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
     // VARIABLES
+    [Header("References")]
     [SerializeField] private GameObject guardianVictoryText;
     [SerializeField] private GameObject heroVictoryText;
     [SerializeField] private TMPro.TextMeshProUGUI heroScoreText;
     [SerializeField] private TMPro.TextMeshProUGUI guardianScoreText;
     [SerializeField] private TMPro.TextMeshProUGUI timerText;
+    [SerializeField] private GameObject guardianPrefab;
 
+    [Header("Level Param")]
+    [SerializeField] private bool heroRespawns;
+
+    [Header("Counters")]
     [SerializeField] private int prisonersInScene;
     [SerializeField] private int guardiansInScene;
     [SerializeField] private int heroesInScene;
@@ -19,6 +25,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int guardiansKilled;
     [SerializeField] private int heroesKilled;
     [SerializeField] private int timeElapsed = 0;
+    [SerializeField] private int score = 0;
+    [SerializeField] private int prisonerNeutralized = 0;
 
 
     // METHODS
@@ -33,8 +41,9 @@ public class GameManager : MonoBehaviour
             heroVictoryText.SetActive(false);
 
         // Register event listeners.
-        HeroKillZone.OnCaptureZoneEnter += UpdateHeroesKilled;
-        GuardianKillZone.OnKillZoneEnter += UpdateGuardiansKilled;
+        Player.OnPlayerCaughtHero += UpdateHeroesKilled;
+        HeroKillZone.OnHeroKillZoneEnter += UpdateHeroesKilled;
+        GuardianKillZone.OnGuardianKillZoneEnter += UpdateGuardiansKilled;
         Fortress.OnPrisonerFortressEnter += UpdatePrisonersRescued;
 
         // Count items in scene.
@@ -61,7 +70,41 @@ public class GameManager : MonoBehaviour
 
         // check for victory if needed
     }
-    void UpdateHeroesKilled(GameObject dummy)
+    void UpdateHeroesKilled(GameObject potentialHeroSO, bool killForever)
+    {
+        //Debug.Log(string.Format("The player hit a hero, will they be killed forever? {0}", killForever));
+
+        Hero potentialHero = potentialHeroSO.GetComponent<Hero>();
+        if (potentialHero)
+        {
+            if (killForever)
+            {
+                UpdateHeroesKilled();
+                prisonerNeutralized++;
+            }
+            else
+            {
+                // Spawn a new guardian in the scene. Recalculate their numbers.
+                Instantiate(guardianPrefab, potentialHeroSO.transform.position, potentialHeroSO.transform.rotation);
+                guardiansInScene++;
+
+                score -= 10;
+            }
+            UpdateScoreText();
+        }
+    }
+    void UpdateHeroesKilled(GameObject potentialHeroSO)
+    {
+        if (potentialHeroSO.CompareTag("Hero"))
+        {
+            Hero potentialHero = potentialHeroSO.GetComponent<Hero>();
+            if (potentialHero && !potentialHero.Respawns)
+            {
+                UpdateHeroesKilled();
+            }
+        }
+    }
+    void UpdateHeroesKilled()
     {
         heroesKilled += 1;
         UpdateScoreText();
@@ -74,6 +117,7 @@ public class GameManager : MonoBehaviour
     void UpdatePrisonersRescued(GameObject dummy)
     {
         prisonersRescued += 1;
+        score += 25;
         UpdateScoreText();
 
         if (prisonersRescued == prisonersInScene)
@@ -85,11 +129,11 @@ public class GameManager : MonoBehaviour
     {
         if (heroScoreText != null)
         {
-            heroScoreText.text = (string.Format("Heroes' Score:\n{0:D2}/{1:D2} Guadians Killed\n{2:D2}/{3:D2} Prisoners Rescued\n({4:D3} Points)", guardiansKilled, guardiansInScene, prisonersRescued, prisonersInScene, prisonersRescued * 25));
+            heroScoreText.text = (string.Format("Heroes' Score:\n{0:D2}/{1:D2} Guadians Killed\n{2:D2}/{3:D2} Prisoners Rescued\n({4:D3} Points)", guardiansKilled, guardiansInScene, prisonersRescued, prisonersInScene, score));
         }
         if (guardianScoreText != null)
         {
-            guardianScoreText.text = (string.Format("Guardians' Score:\n{0:D2}/{1:D2} Heroes Killed", heroesKilled, heroesInScene));
+            guardianScoreText.text = (string.Format("Guardians' Score:\n{0:D2}/{1:D2} Heroes Killed\n{2:D2}/{3:D2} Prisoners Locked", heroesKilled, heroesInScene, prisonerNeutralized, prisonersInScene));
             // To do: add untouchable prisoner count.
         }
     }
@@ -123,8 +167,4 @@ public class GameManager : MonoBehaviour
             }
         }
     }
-
-
-    // TO DO: hero gets +25 points when a prisoner is brought to the base.
-
 }

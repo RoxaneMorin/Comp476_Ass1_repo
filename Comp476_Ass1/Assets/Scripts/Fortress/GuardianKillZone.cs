@@ -11,7 +11,8 @@ public class GuardianKillZone : MonoBehaviour
 
     // EVENTS
     public delegate void EventKillZoneOnEnter(GameObject go);
-    public static event EventKillZoneOnEnter OnKillZoneEnter;
+    public static event EventKillZoneOnEnter OnGuardianKillZoneEnter;
+    public static event EventKillZoneOnEnter OnPlayerKillZoneEnter;
 
 
 
@@ -30,7 +31,7 @@ public class GuardianKillZone : MonoBehaviour
         Guardian caughtGuardian = other.gameObject.GetComponent<Guardian>();
         if (caughtGuardian)
         {
-            OnKillZoneEnter?.Invoke(other.gameObject);
+            OnGuardianKillZoneEnter?.Invoke(other.gameObject);
 
             Hero guardiansTarget = caughtGuardian.myTarget.GetComponent<Hero>();
 
@@ -41,6 +42,16 @@ public class GuardianKillZone : MonoBehaviour
             {
                 guardiansTarget.ClearFlee(true);
             }
+
+            return;
+        }
+
+        Player caughtPlayer = other.gameObject.GetComponent<Player>();
+        if (caughtPlayer)
+        {
+            Debug.Log("The player has hit a killzone!");
+
+            OnPlayerKillZoneEnter?.Invoke(other.gameObject);
 
             return;
         }

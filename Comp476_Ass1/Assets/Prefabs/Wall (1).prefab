@@ -314,6 +314,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69d543135483e894cac72d93cba0a408, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  killPlayer: 1
 --- !u!1 &5998265572064330116
 GameObject:
   m_ObjectHideFlags: 0
@@ -460,6 +461,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69d543135483e894cac72d93cba0a408, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  killPlayer: 1
 --- !u!1 &8425057428162907634
 GameObject:
   m_ObjectHideFlags: 0

@@ -8,7 +8,8 @@ public class Prisoner : NPC
     public enum PrisonerStates
     {
         Wait,
-        ReachFortress
+        ReachFortress,
+        FollowPlayer
     }
 
     // VARIABLES
@@ -19,6 +20,7 @@ public class Prisoner : NPC
     [Space]
 
     [SerializeField] private PrisonerStates myState = PrisonerStates.Wait;
+    public PrisonerStates MyState { get { return myState; }}
     [SerializeField] private PrisonerStates previousState = PrisonerStates.Wait;
     [SerializeField] private bool isBusy = false;
     public bool IsBusy { get { return isBusy; } }
@@ -44,8 +46,20 @@ public class Prisoner : NPC
         previousTarget = myTarget;
         previousState = myState;
 
+        myFriendHero = null;
         myState = PrisonerStates.Wait;
         isBusy = false;
+    }
+
+    public void InitFollowPlayer(GameObject thePlayer)
+    {
+        previousTarget = myTarget;
+        previousState = myState;
+        myFriendHero = null;
+
+        isBusy = true;
+        myTarget = thePlayer;
+        myState = PrisonerStates.FollowPlayer;
     }
 
 
@@ -80,15 +94,15 @@ public class Prisoner : NPC
         {
             // They are indexed in accordance with the PrisonerStates enum.
             null,
+            ArriveSteer,
             ArriveSteer
         };
     }
 
     void Update()
     {
-        if (myState == PrisonerStates.ReachFortress)
+        if (myState != PrisonerStates.Wait)
         {
-            // TO DO: change being rescued behaviour to arriving at the hero.
             Move();
         }
     }
