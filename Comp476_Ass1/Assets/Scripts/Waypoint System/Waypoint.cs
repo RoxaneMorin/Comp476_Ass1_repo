@@ -7,7 +7,8 @@ public class Waypoint : MonoBehaviour
     // VARIABLES
     [SerializeField] protected Waypoint nextWaypointUp;
     [SerializeField] protected Waypoint nextWaypointDown;
-
+    public Waypoint NextWaypointUp { get { return nextWaypointUp; } }
+    public Waypoint NextWaypointDown { get { return nextWaypointDown; } }
 
 
     // EVENTS

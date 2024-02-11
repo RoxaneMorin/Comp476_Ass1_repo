@@ -18,6 +18,13 @@ public class NPC : MonoBehaviour
     public GameObject myTarget;
     [SerializeField] protected GameObject previousTarget;
     [SerializeField] protected bool targetReached = false;
+    public bool TargetReached { get; set; }
+
+    // Weights.
+    [Header("Movement Weights")]
+    [SerializeField] protected float toAvoidPassiveWeight = 0.75f;
+    [SerializeField] protected float toAvoidActiveWeight = 1.5f;
+    [SerializeField] protected float toNextWaypointWeigth = 0.5f;
 
     // Obstacle detection.
     [Header("Obstacle Avoidance")]
@@ -29,6 +36,7 @@ public class NPC : MonoBehaviour
     [SerializeField] protected int feelersCount = 3;
     [SerializeField] protected float feelersAngle = 45f;
     [SerializeField] protected float feelersDistance = 3f;
+    [SerializeField] protected float shortenFeelersDivision = 2f;
 
     // Waypoint system.
     [Header("Waypoint System")]
@@ -74,10 +82,16 @@ public class NPC : MonoBehaviour
 
     // Utilities 
 
-    // TO DO: target passed as a parameter?
     protected Vector3 DesiredVelocityIfTarget(GameObject target)
     {
         return target != null ? target.transform.position - transform.position : Vector3.zero;
+    }
+
+    public void ClearWaypointInfo()
+    {
+        nextWaypoint = null;
+        previousWaypoint = null;
+        isCrossing = false;
     }
 
     // LookWhereYouAreGoing
@@ -234,14 +248,14 @@ public class NPC : MonoBehaviour
             if (useFeelers)
             {
                 CastFeelers();
-                desiredVelocity += AvoidObstacles(toAvoidPassive) * 0.75f;
+                desiredVelocity += AvoidObstacles(toAvoidPassive) * toAvoidPassiveWeight;
             }
-            desiredVelocity += AvoidObstacles(toAvoidActive) * 1.5f;
+            desiredVelocity += AvoidObstacles(toAvoidActive) * toAvoidActiveWeight;
         }
 
         if (useWaypoints && nextWaypoint)
         {
-            desiredVelocity += SeekSteer(nextWaypoint.gameObject) * 0.5f;
+            desiredVelocity += SeekSteer(nextWaypoint.gameObject) * toNextWaypointWeigth;
         }
 
         desiredVelocity = Vector3.ClampMagnitude(desiredVelocity, maxVelocity);
@@ -273,7 +287,7 @@ public class NPC : MonoBehaviour
         for (int i = 0; i < feelersCount; i++)
         {
             // Modulate the lenght of each feeler by position in the fan.
-            float localFeelerDistance = feelersDistance / (Math.Abs(feelersMidCount - (i+1)) / 2f + 1);
+            float localFeelerDistance = feelersDistance / (Math.Abs(feelersMidCount - (i+1)) / shortenFeelersDivision + 1);
 
             Vector3 currentDirection = Quaternion.Euler(0, i * angleStep, 0) * startDirection;
             Ray ray = new Ray(transform.position, currentDirection);
@@ -282,7 +296,13 @@ public class NPC : MonoBehaviour
             if (Physics.Raycast(ray, out hit, localFeelerDistance))
             {
                 // TO DO: only register the relevant objects, or sort objects in different categories.
-                toAvoidPassive.Add(hit.collider.gameObject);
+
+                // The hero doesn't avoid the prisoner; guardians don't avoid the hero.
+                if (!(this.gameObject.CompareTag("Hero") && hit.collider.gameObject.CompareTag("Prisoner")) &&
+                    !(this.gameObject.CompareTag("Guardian") && hit.collider.gameObject.CompareTag("Hero")))
+                {
+                    toAvoidPassive.Add(hit.collider.gameObject);
+                }
             }
 
             // Visualize their little feelers uwu
@@ -303,13 +323,18 @@ public class NPC : MonoBehaviour
 
 
     // Misc
-    protected Prisoner FindClosestPrisoner()
+    protected Prisoner FindClosestPrisoner(bool ignoreBusy = false)
     {
         GameObject[] potentialPrisoners = GameObject.FindGameObjectsWithTag("Prisoner");
 
         if (potentialPrisoners.Length == 1)
         {
-            return potentialPrisoners[0].GetComponent<Prisoner>();
+            Prisoner tempPrisoner = potentialPrisoners[0].GetComponent<Prisoner>();
+
+            if (!tempPrisoner.IsBusy && tempPrisoner.isActiveAndEnabled)
+            {
+                return potentialPrisoners[0].GetComponent<Prisoner>();
+            }
         }
         else if (potentialPrisoners.Length > 0)
         {
@@ -321,20 +346,24 @@ public class NPC : MonoBehaviour
                 float distance = Vector3.Distance(gameObject.transform.position, potentialPrisoner.transform.position);
                 if (distance < closestDistance && potentialPrisoner.activeSelf == true)
                 {
-                    closestDistance = distance;
-                    closestPotentialPrisoner = potentialPrisoner;
+                    Prisoner tempPrisoner = potentialPrisoner.GetComponent<Prisoner>();
+
+                    if (tempPrisoner!= null && !tempPrisoner.IsBusy && tempPrisoner.isActiveAndEnabled)
+                    {
+                        closestDistance = distance;
+                        closestPotentialPrisoner = potentialPrisoner;
+                    }
                 }
             }
             return closestPotentialPrisoner.GetComponent<Prisoner>();
         }
-        else // Will probably need to handle state changes.
-            return null;
+        return null;
     }
 
 
     // Event handlers.
-    virtual protected void TargetReached(GameObject target)
+    virtual protected void MyTargetReached(GameObject target)
     {
-        // Debug.Log(string.Format("{0} has reached its target, {1}.", this, target));
+        Debug.Log(string.Format("{0} has reached its target, {1}.", this, target));
     }
 }

@@ -653,17 +653,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a127811e6fbcf7849ab3e06d88860de8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxVelocity: 6
+  maxVelocity: 16
   defaultVelocity: 0
   myTarget: {fileID: 0}
   previousTarget: {fileID: 0}
   targetReached: 0
+  toAvoidPassiveWeight: 0.75
+  toAvoidActiveWeight: 1.5
+  toNextWaypointWeigth: 0.5
   useFeelers: 0
   toAvoidPassive: []
   toAvoidActive: []
   feelersCount: 3
   feelersAngle: 45
   feelersDistance: 3
+  shortenFeelersDivision: 2
+  useWaypoints: 1
   isCrossing: 0
   previousWaypoint: {fileID: 0}
   nextWaypoint: {fileID: 0}
@@ -677,6 +682,7 @@ MonoBehaviour:
   myFriendHero: {fileID: 0}
   myState: 0
   previousState: 0
+  isBusy: 0
 --- !u!1 &1376339605
 GameObject:
   m_ObjectHideFlags: 0
@@ -797,17 +803,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9c863dd84ff3554b83355791259fa96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxVelocity: 6
+  maxVelocity: 16
   defaultVelocity: 0
   myTarget: {fileID: 1149951131}
   previousTarget: {fileID: 0}
   targetReached: 0
+  toAvoidPassiveWeight: 0.75
+  toAvoidActiveWeight: 1.5
+  toNextWaypointWeigth: 0.5
   useFeelers: 1
   toAvoidPassive: []
   toAvoidActive: []
   feelersCount: 5
   feelersAngle: 45
   feelersDistance: 3
+  shortenFeelersDivision: 2
+  useWaypoints: 1
   isCrossing: 0
   previousWaypoint: {fileID: 0}
   nextWaypoint: {fileID: 0}
@@ -818,12 +829,17 @@ MonoBehaviour:
   aheadDivider: 10
   wanderInterval: 1
   wanderDegreesDelta: 180
+  huntGuardians: 0
   myFortress: {fileID: 1716375989}
-  myFriendPrisoner: {fileID: 0}
+  myFriendPrisoner: {fileID: 1149951136}
   myState: 0
   previousState: 0
   stopEscapeTimeBuffer: 1
+  findNewGuardianTimeBuffer: 10
   guardianHuntingVelocity: 3
+  guardianTrailingWeightIncrease: 0.5
+  tailFeelerLengthDivider: 3
+  guardianOnMyTrail: 0
 --- !u!1 &1716375989
 GameObject:
   m_ObjectHideFlags: 0

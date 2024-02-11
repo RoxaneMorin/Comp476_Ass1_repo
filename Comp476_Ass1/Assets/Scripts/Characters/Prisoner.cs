@@ -20,6 +20,8 @@ public class Prisoner : NPC
 
     [SerializeField] private PrisonerStates myState = PrisonerStates.Wait;
     [SerializeField] private PrisonerStates previousState = PrisonerStates.Wait;
+    [SerializeField] private bool isBusy = false;
+    public bool IsBusy { get { return isBusy; } }
 
     Func<GameObject, Vector3>[] moveFunctionsPerState; // Possible move functions, should follow the indexing of PrisonerStates.
 
@@ -32,8 +34,10 @@ public class Prisoner : NPC
         previousTarget = myTarget;
         previousState = myState;
 
-        myTarget = targetFortress;
+        myFriendHero = rescuer;
+        myTarget = myFriendHero.gameObject;
         myState = Prisoner.PrisonerStates.ReachFortress;
+        isBusy = true;
     }
     public void StopRescue()
     {
@@ -41,13 +45,14 @@ public class Prisoner : NPC
         previousState = myState;
 
         myState = PrisonerStates.Wait;
+        isBusy = false;
     }
 
 
     // Movement
     protected void Move()
     {
-        // Simple as we don't have much to do beside obstacle avoidance.
+         //Simple as we don't have much to do beside obstacle avoidance.
         Vector3 desiredVelocity = moveFunctionsPerState[(int)myState](myTarget);
 
         Move(desiredVelocity);
@@ -55,9 +60,9 @@ public class Prisoner : NPC
 
 
     // Event receivers.
-    override protected void TargetReached(GameObject target)
+    override protected void MyTargetReached(GameObject target)
     {
-        base.TargetReached(target);
+        base.MyTargetReached(target);
     }
 
 
@@ -68,14 +73,14 @@ public class Prisoner : NPC
         defaultVelocity = maxVelocity;
 
         // Register the event listeners.
-        OnTargetReached += TargetReached;
+        OnTargetReached += MyTargetReached;
 
         // Furnish the possible move functions.
         moveFunctionsPerState = new Func<GameObject, Vector3>[]
         {
             // They are indexed in accordance with the PrisonerStates enum.
             null,
-            SeekSteer
+            ArriveSteer
         };
     }
 
@@ -83,6 +88,7 @@ public class Prisoner : NPC
     {
         if (myState == PrisonerStates.ReachFortress)
         {
+            // TO DO: change being rescued behaviour to arriving at the hero.
             Move();
         }
     }

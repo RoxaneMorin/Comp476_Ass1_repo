@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FortressKillzone : MonoBehaviour
+public class GuardianKillZone : MonoBehaviour
 {
     // VARIABLES
     [SerializeField] protected Fortress myFortress; // Probably not necessary.
@@ -32,11 +32,32 @@ public class FortressKillzone : MonoBehaviour
         {
             OnKillZoneEnter?.Invoke(other.gameObject);
 
-            Debug.Log(string.Format("A guardian has been eliminated!"));
+            Hero guardiansTarget = caughtGuardian.myTarget.GetComponent<Hero>();
 
             other.gameObject.SetActive(false);
+            Debug.Log(string.Format("A guardian has been eliminated!"));
 
-            //Destroy(other.gameObject, 1f); // Leave time for cleanup.
+            if (guardiansTarget)
+            {
+                guardiansTarget.ClearFlee(true);
+            }
+
+            return;
+        }
+
+        Hero enteringHero = other.gameObject.GetComponent<Hero>();
+        if (enteringHero)
+        {
+            enteringHero.TargetReached = true;
+        }
+    }
+    private void OnTriggerExit(Collider other)
+    {
+        Hero exitingHero = other.gameObject.GetComponent<Hero>();
+        if (exitingHero)
+        {
+            Debug.Log("A hero is exiting the base's surroundings.");
+            exitingHero.TargetReached = false;
         }
     }
 }

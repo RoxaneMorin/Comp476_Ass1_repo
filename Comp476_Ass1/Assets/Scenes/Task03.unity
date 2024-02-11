@@ -246,17 +246,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3fda5988937d3284aa289e1f1a12020c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxVelocity: 3
+  maxVelocity: 4
   defaultVelocity: 0
   myTarget: {fileID: 1149951131}
   previousTarget: {fileID: 0}
   targetReached: 0
+  toAvoidPassiveWeight: 0.75
+  toAvoidActiveWeight: 1.5
+  toNextWaypointWeigth: 0.5
   useFeelers: 1
-  toAvoidInoffensive: []
-  toAvoidDanger: []
+  toAvoidPassive: []
+  toAvoidActive: []
   feelersCount: 3
   feelersAngle: 45
   feelersDistance: 15
+  shortenFeelersDivision: 2
+  useWaypoints: 1
+  isCrossing: 0
+  previousWaypoint: {fileID: 0}
+  nextWaypoint: {fileID: 0}
   YOnly: 1
   seekStopRadius: 1
   arriveStopRadius: 3
@@ -1146,9 +1154,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3051fd3959790b749b74bbd958fbc0f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameOverText: {fileID: 168972789}
+  guardianVictoryText: {fileID: 0}
+  heroVictoryText: {fileID: 0}
   heroScoreText: {fileID: 0}
-  heroScore: 0
+  guardianScoreText: {fileID: 0}
+  timerText: {fileID: 0}
+  prisonersInScene: 0
+  guardiansInScene: 0
+  heroesInScene: 0
+  prisonersRescued: 0
+  guardiansKilled: 0
+  heroesKilled: 0
+  timeElapsed: 0
 --- !u!1 &1149951131
 GameObject:
   m_ObjectHideFlags: 0
@@ -1162,7 +1179,7 @@ GameObject:
   - component: {fileID: 1149951133}
   - component: {fileID: 1149951132}
   - component: {fileID: 1149951136}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Prisoner
   m_TagString: Prisoner
   m_Icon: {fileID: 0}
@@ -1269,17 +1286,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a127811e6fbcf7849ab3e06d88860de8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxVelocity: 6
-  defaultVelocity: 0
+  maxVelocity: 8
+  defaultVelocity: 8
   myTarget: {fileID: 0}
   previousTarget: {fileID: 0}
   targetReached: 0
+  toAvoidPassiveWeight: 0.75
+  toAvoidActiveWeight: 1.5
+  toNextWaypointWeigth: 0.5
   useFeelers: 1
-  toAvoidInoffensive: []
-  toAvoidDanger: []
+  toAvoidPassive: []
+  toAvoidActive: []
   feelersCount: 3
   feelersAngle: 45
   feelersDistance: 10
+  shortenFeelersDivision: 2
+  useWaypoints: 1
+  isCrossing: 0
+  previousWaypoint: {fileID: 0}
+  nextWaypoint: {fileID: 0}
   YOnly: 1
   seekStopRadius: 0.5
   arriveStopRadius: 1.5
@@ -1290,6 +1315,7 @@ MonoBehaviour:
   myFriendHero: {fileID: 0}
   myState: 0
   previousState: 0
+  isBusy: 0
 --- !u!1 &1376339605
 GameObject:
   m_ObjectHideFlags: 0
@@ -1410,17 +1436,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9c863dd84ff3554b83355791259fa96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxVelocity: 6
-  defaultVelocity: 6
+  maxVelocity: 8
+  defaultVelocity: 8
   myTarget: {fileID: 1149951131}
   previousTarget: {fileID: 0}
   targetReached: 0
+  toAvoidPassiveWeight: 0.75
+  toAvoidActiveWeight: 1.5
+  toNextWaypointWeigth: 0.5
   useFeelers: 1
-  toAvoidInoffensive: []
-  toAvoidDanger: []
+  toAvoidPassive: []
+  toAvoidActive: []
   feelersCount: 3
   feelersAngle: 45
   feelersDistance: 15
+  shortenFeelersDivision: 2
+  useWaypoints: 0
+  isCrossing: 0
+  previousWaypoint: {fileID: 0}
+  nextWaypoint: {fileID: 0}
   YOnly: 1
   seekStopRadius: 1
   arriveStopRadius: 3
@@ -1428,12 +1462,18 @@ MonoBehaviour:
   aheadDivider: 10
   wanderInterval: 1
   wanderDegreesDelta: 180
+  huntGuardians: 0
   myFortress: {fileID: 1716375989}
   myFriendPrisoner: {fileID: 0}
   myState: 0
   previousState: 0
-  stopEscapeTimeBuffer: 1
-  guardianHuntingVelocity: 6
+  stopEscapeTimeBuffer: 0.5
+  findNewGuardianTimeBuffer: 5
+  guardianHuntingVelocity: 3
+  guardianTrailingWeightIncrease: 0.5
+  tailFeelerLengthDivider: 3
+  tailFeelersNumber: 3
+  guardianOnMyTrail: 0
 --- !u!1 &1716375989
 GameObject:
   m_ObjectHideFlags: 0
@@ -1596,7 +1636,7 @@ GameObject:
   - component: {fileID: 1845259873}
   - component: {fileID: 1845259876}
   - component: {fileID: 1845259877}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Guardian_CaptureZone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1703,7 +1743,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69d543135483e894cac72d93cba0a408, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myGuardian: {fileID: 56540819}
 --- !u!54 &1845259877
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2041,7 +2080,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc7c1593b12ccdb48b0278655c061cfc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myGuardian: {fileID: 56540819}
 --- !u!54 &2082690127
 Rigidbody:
   m_ObjectHideFlags: 0

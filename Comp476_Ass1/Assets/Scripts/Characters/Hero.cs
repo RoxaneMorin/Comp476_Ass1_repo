@@ -15,6 +15,7 @@ public class Hero : NPC
 
     // VARIABLES.
     [Header("Hero Variables")]
+    [SerializeField] private bool huntGuardians = true;
     [SerializeField] protected GameObject myFortress;
     [SerializeField] protected Prisoner myFriendPrisoner;
     
@@ -22,18 +23,34 @@ public class Hero : NPC
 
     [SerializeField] private HeroStates myState = HeroStates.ReachPrisoner;
     [SerializeField] private HeroStates previousState = HeroStates.ReachPrisoner;
-    //[SerializeField] private bool isSneaking = false;
 
     Func<GameObject, Vector3>[] moveFunctionsPerState; // Possible move functions, should follow the indexing of HeroStates.
 
     [Space]
 
     [SerializeField] private float stopEscapeTimeBuffer = 1f;
+    [SerializeField] private float findNewGuardianTimeBuffer = 10f;
     [SerializeField] private float guardianHuntingVelocity = 3f;
+
+    [Space]
+
+    [SerializeField] private float guardianTrailingWeightIncrease = 0.5f;
+    [SerializeField] private float tailFeelerLengthDivider = 3f;
+    [SerializeField] private bool guardianOnMyTrail = false;
 
 
 
     // METHODS
+
+    public void InitReachPrisoner()
+    {
+        if (!myFriendPrisoner || !myFriendPrisoner.isActiveAndEnabled)
+        {
+            myFriendPrisoner = FindClosestPrisoner(true);
+        }
+        myTarget = myFriendPrisoner.gameObject;
+        myState = HeroStates.ReachPrisoner;
+    }
 
     public void FleeGuardian(GameObject targetGuardian)
     {
@@ -74,6 +91,8 @@ public class Hero : NPC
         GameObject tempTarget = myTarget;
         HeroStates tempState = myState;
 
+        ClearWaypointInfo();
+
         // How to handle them being deleted?
         if (toAvoidActive.Contains(targetGuardian))
         {
@@ -84,14 +103,15 @@ public class Hero : NPC
         {
             Debug.Log("No longer fleeing anyone");
 
-            if (previousState == HeroStates.ReachPrisoner || previousState == HeroStates.ReachFortress)
+            if ((previousState == HeroStates.ReachPrisoner || previousState == HeroStates.ReachFortress) && myFriendPrisoner.isActiveAndEnabled)
             {
-                myTarget = myFriendPrisoner.gameObject;
-                myState = Hero.HeroStates.ReachPrisoner;
+                InitReachPrisoner();
             }
             else if (previousState == HeroStates.FleeGuardian)
             {
-                HuntForGuardian();
+                // A closer guardian may be present.
+                targetGuardian = null;
+                HuntForGuardian(true);
             }
             else
             {
@@ -124,68 +144,138 @@ public class Hero : NPC
         return false;
     }
 
-    Guardian FindClosestGuardian()
+    Guardian FindClosestGuardianByFoV()
     {
-        GameObject[] potentialGuardians = GameObject.FindGameObjectsWithTag("Guardian");
+        GameObject[] potentialGuardianFoVs = GameObject.FindGameObjectsWithTag("FoV");
 
-        if (potentialGuardians.Length == 1)
+        if (potentialGuardianFoVs.Length == 1)
         {
-            return potentialGuardians[0].GetComponent<Guardian>();
+            GuardianFoV potentialGuardianFoV = potentialGuardianFoVs[0].GetComponent<GuardianFoV>();
+            Guardian potentialGuardian = potentialGuardianFoV.GetComponentInParent<Guardian>();
+
+            return potentialGuardian;
         }
-        else if (potentialGuardians.Length > 1)
+        else if (potentialGuardianFoVs.Length > 1)
         {
             float closestDistance = Mathf.Infinity;
-            GameObject closestPotentialGuardian = null;
+            GameObject closestPotentialGuardianFoV = null;
 
-            foreach (GameObject potentialGuardian in potentialGuardians)
+            foreach (GameObject potentialGuardianFoV in potentialGuardianFoVs)
             {
-                float distance = Vector3.Distance(gameObject.transform.position, potentialGuardian.transform.position);
-                if (distance < closestDistance && potentialGuardian.activeInHierarchy == true)
+                float distance = Vector3.Distance(gameObject.transform.position, potentialGuardianFoV.transform.position);
+                if (distance < closestDistance && potentialGuardianFoV.activeInHierarchy == true)
                 {
                     closestDistance = distance;
-                    closestPotentialGuardian = potentialGuardian;
+                    closestPotentialGuardianFoV = potentialGuardianFoV;
                 }
             }
-            return closestPotentialGuardian.GetComponent<Guardian>();
+            return closestPotentialGuardianFoV.GetComponentInParent<Guardian>();
         }
         else
             return null;
     }
-
-    public void HuntForGuardian()
+    public void ClearFlee(bool ignoreGuardians = false)
     {
-        Guardian targetGuardian = myTarget.GetComponent<Guardian>();
-
-        if (!targetGuardian || !targetGuardian.gameObject.activeInHierarchy)
+        if (ignoreGuardians || !GuardiansInToAvoid())
         {
-            // Debug.Log(string.Format("{0} is hunting for a Guardian...", gameObject));
-            targetGuardian = FindClosestGuardian();
-
-            // TO DO: use closest guardian fov instead.s
+            targetReached = false;
+            ClearWaypointInfo();
+            HuntForGuardian(true);
         }
+    }
 
-        if (targetGuardian)
+    public void HuntForGuardian(bool retarget = false)
+    {
+        if (huntGuardians)
         {
-            Debug.Log(string.Format("{0} is attempting to lure {1} to its doom...", gameObject, targetGuardian.gameObject));
-
-            myState = HeroStates.TauntGuardian;
-            myTarget = targetGuardian.myFoV.gameObject;
-        }
-        else // Move on to rescuing the prisoner.
-        {
-            if (!myFriendPrisoner)
+            Guardian targetGuardian = null;
+            if (myTarget)
             {
-                myFriendPrisoner = FindClosestPrisoner();
+                targetGuardian = myTarget.GetComponent<Guardian>();
             }
-            myTarget = myFriendPrisoner.gameObject;
-            myState = HeroStates.ReachPrisoner;
+
+            if (retarget || targetGuardian == null || !targetGuardian.gameObject.activeInHierarchy)
+            {
+                // Debug.Log(string.Format("{0} is hunting for a Guardian...", gameObject));
+                targetGuardian = FindClosestGuardianByFoV();
+            }
+
+            if (targetGuardian)
+            {
+                Debug.Log(string.Format("{0} is attempting to lure {1} to its doom...", gameObject, targetGuardian.gameObject));
+
+                myState = HeroStates.TauntGuardian;
+                myTarget = targetGuardian.myFoV.gameObject;
+
+                Invoke("HuntForGuardianRetry", findNewGuardianTimeBuffer);
+            }
+            else
+            {
+                // Move on to rescuing the prisoner.
+                InitReachPrisoner();
+            }
         }
+        else
+        {
+            // Move on to rescuing the prisoner.
+            InitReachPrisoner();
+        }
+        
     }
     public IEnumerator HuntForGuardianDelayed()
     {
-        yield return new WaitForSeconds(stopEscapeTimeBuffer);
+        yield return new WaitForSeconds(findNewGuardianTimeBuffer);
 
-        HuntForGuardian();
+        HuntForGuardian(true);
+    }
+    public void HuntForGuardianRetry()
+    {
+        //Debug.Log("In HuntForGuardianRetry.");
+        if (myState == HeroStates.TauntGuardian)
+        {
+            HuntForGuardian(true);
+        }
+    }
+
+    protected bool CastBackFeeler()
+    {
+        // To do: try to make these a fan.
+        
+        float tailFeelerDistance = feelersDistance / tailFeelerLengthDivider;
+        Ray ray = new Ray(transform.position, -transform.forward);
+        RaycastHit hit;
+
+        // Visualize their little feelers uwu
+        Debug.DrawRay(ray.origin, -transform.forward * (tailFeelerDistance), Color.white);
+
+        if (Physics.Raycast(ray, out hit, tailFeelerDistance))
+        {
+            // Check if the thing hit is a guardian's capture zone.
+            if (hit.collider.gameObject.CompareTag("GuardianCaptureZone"))
+            {
+                // Debug.Log(string.Format("A guardian is closely trailing {0}.", gameObject));
+                return true;
+            }
+        }
+        // else,
+        return false;
+    }
+    protected void TryHaste()
+    {
+        bool isBeingTrailed = CastBackFeeler();
+
+        if (isBeingTrailed && !guardianOnMyTrail)
+        {
+            guardianOnMyTrail = true;
+            toAvoidActiveWeight += guardianTrailingWeightIncrease;
+            maxVelocity += guardianTrailingWeightIncrease;
+        }
+        else if (!isBeingTrailed && guardianOnMyTrail)
+        {
+            guardianOnMyTrail = false;
+            toAvoidActiveWeight -= guardianTrailingWeightIncrease;
+            maxVelocity -= guardianTrailingWeightIncrease;
+        }
     }
 
 
@@ -200,9 +290,11 @@ public class Hero : NPC
 
 
     // Event receivers.
-    override protected void TargetReached(GameObject target)
+    override protected void MyTargetReached(GameObject target)
     {
-        base.TargetReached(target);
+        // base.MyTargetReached(target);
+
+        Debug.Log(string.Format("The hero reached its target, {0}.", target));
 
         // Have we reached a prisoner?
         if (target.CompareTag("Prisoner"))
@@ -220,17 +312,17 @@ public class Hero : NPC
             previousTarget = myTarget;
             previousState = myState;
 
-            targetReached = false;
-
             myFriendPrisoner = targetPrisoner;
             myTarget = myFortress;
             myState = HeroStates.ReachFortress;
         }
-
-        else if (target.CompareTag("Fortress"))
+        if (target.CompareTag("Fortress") && myState == HeroStates.ReachFortress)
         {
-            targetReached = false;
+            myState = HeroStates.TauntGuardian;
+            HuntForGuardian(true);
         }
+
+        targetReached = false;
     }
 
     void GuardianDestroyed(GameObject dyingGardianGO)
@@ -251,6 +343,23 @@ public class Hero : NPC
         }
     }
 
+    void HeroKilled(GameObject killedHeroGO)
+    {
+        // To do: respawn the hero at the base if it was caught by the player.
+
+        if (killedHeroGO == this.gameObject)
+        {
+            this.gameObject.SetActive(false);
+        }
+    }
+
+    void PrisonerReachedFortress(GameObject dummy)
+    {
+        // huntGuardians = true;
+        myState = HeroStates.TauntGuardian;
+        HuntForGuardian(true);
+    }
+
 
     // Built in.
 
@@ -260,8 +369,10 @@ public class Hero : NPC
         defaultVelocity = maxVelocity;
 
         // Register the event listeners.
-        OnTargetReached += TargetReached;
-        FortressKillzone.OnKillZoneEnter += GuardianDestroyed;
+        OnTargetReached += MyTargetReached;
+        HeroKillZone.OnCaptureZoneEnter += HeroKilled;
+        GuardianKillZone.OnKillZoneEnter += GuardianDestroyed;
+        Fortress.OnPrisonerFortressEnter += PrisonerReachedFortress;
 
         // Furnish the possible move functions.
         moveFunctionsPerState = new Func<GameObject, Vector3>[]
@@ -274,17 +385,16 @@ public class Hero : NPC
         };
 
         // Find closest Prisoner.
-        myFriendPrisoner = FindClosestPrisoner();
+        myFriendPrisoner = FindClosestPrisoner(true);
 
         // Find closest Guardian.
-        if (myState == HeroStates.TauntGuardian)
-        {
-            HuntForGuardian();
-        }
+        myState = HeroStates.TauntGuardian;
+        HuntForGuardian(true);
     }
 
     void Update()
     {
+        TryHaste();
         Move();
     }
 }

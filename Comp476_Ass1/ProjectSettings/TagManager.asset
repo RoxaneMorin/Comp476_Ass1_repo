@@ -11,6 +11,7 @@ TagManager:
   - Fortress
   - Waypoint
   - Obstacle
+  - GuardianCaptureZone
   layers:
   - Default
   - TransparentFX

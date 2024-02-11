@@ -2,10 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GuardianCaptureZone : MonoBehaviour
+// Can also be reused as a wall killzone.
+public class HeroKillZone : MonoBehaviour
 {
     // VARIABLES
-    [SerializeField] protected Guardian myGuardian; // Probably not necessary as the guardian already receives events.
 
 
 
@@ -20,7 +20,6 @@ public class GuardianCaptureZone : MonoBehaviour
     // Built in.
     private void Start()
     {
-        myGuardian = GetComponentInParent<Guardian>();
     }
 
     private void OnTriggerEnter(Collider other)

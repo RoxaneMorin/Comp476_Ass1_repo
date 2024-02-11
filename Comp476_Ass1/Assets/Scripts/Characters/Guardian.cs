@@ -16,7 +16,7 @@ public class Guardian : NPC
     // VARIABLES
     [Header("Guardian Variables")]
     [SerializeField] public GuardianFoV myFoV;
-    [SerializeField] protected GuardianCaptureZone myCaptureZone;
+    [SerializeField] protected HeroKillZone myCaptureZone;
     [SerializeField] protected GameObject myPrisoner;
 
     [Space]
@@ -45,9 +45,9 @@ public class Guardian : NPC
 
 
     // Event receivers.
-    override protected void TargetReached(GameObject target)
+    override protected void MyTargetReached(GameObject target)
     {
-        base.TargetReached(target);
+        base.MyTargetReached(target);
     }
 
     protected void FoVEntered(GameObject enterer)
@@ -71,7 +71,7 @@ public class Guardian : NPC
     }
     protected void FoVExited(GameObject exiter)
     {
-        if (exiter.CompareTag("Hero") && !nextWaypoint)
+        if (exiter.CompareTag("Hero")) // && !nextWaypoint) // Avoid losing track of the hero between walls.
         {
             Debug.Log(string.Format("{0} lost sight of a hero.", this.gameObject));
 
@@ -85,6 +85,9 @@ public class Guardian : NPC
             // Stop chasing the hero.
             previousTarget = myTarget;
             previousState = myState;
+
+            // Clear waypoiint information.
+            ClearWaypointInfo();
 
             myTarget = myPrisoner;
             myState = GuardianStates.ReachPrisoner; // Have it remember its previous state instead?
@@ -110,11 +113,11 @@ public class Guardian : NPC
         // Get components in children.
         myFoV = GetComponentInChildren<GuardianFoV>();
         //mySneakZone = GetComponentInChildren<GuardianSneakZone>();
-        myCaptureZone = GetComponentInChildren<GuardianCaptureZone>();
+        myCaptureZone = GetComponentInChildren<HeroKillZone>();
 
         // Register the event listeners.
-        FortressKillzone.OnKillZoneEnter += KillzoneEnter;
-        OnTargetReached += TargetReached;
+        GuardianKillZone.OnKillZoneEnter += KillzoneEnter;
+        OnTargetReached += MyTargetReached;
         myFoV.OnFoVEnter += FoVEntered;
         myFoV.OnFoVExit += FoVExited;
         //mySneakZone.OnSneakZoneEnter += SneakZoneEntered;
@@ -144,6 +147,11 @@ public class Guardian : NPC
                 if (myState == GuardianStates.Wander && Vector3.Distance(transform.position, myPrisoner.transform.position) > maxDistanceFromMyPrisoner)
                 {
                     previousTarget = myTarget;
+
+                    if (!myPrisoner.activeSelf)
+                    {
+                        myPrisoner = FindClosestPrisoner().gameObject;
+                    }
 
                     myTarget = myPrisoner;
                     myState = GuardianStates.ReachPrisoner;
