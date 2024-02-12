@@ -653,6 +653,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a127811e6fbcf7849ab3e06d88860de8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  myDeathParticleSystem: {fileID: 1939666041920971862, guid: f08d9ebbb00e48747a5a822974ef7d77,
+    type: 3}
   maxVelocity: 16
   defaultVelocity: 0
   myTarget: {fileID: 0}
@@ -803,6 +805,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9c863dd84ff3554b83355791259fa96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  myDeathParticleSystem: {fileID: 0}
   maxVelocity: 16
   defaultVelocity: 0
   myTarget: {fileID: 1149951131}
@@ -829,6 +832,7 @@ MonoBehaviour:
   aheadDivider: 10
   wanderInterval: 1
   wanderDegreesDelta: 180
+  respawns: 0
   huntGuardians: 0
   myFortress: {fileID: 1716375989}
   myFriendPrisoner: {fileID: 1149951136}

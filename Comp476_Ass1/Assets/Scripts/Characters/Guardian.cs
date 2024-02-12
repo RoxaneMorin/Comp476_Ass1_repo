@@ -150,7 +150,12 @@ public class Guardian : NPC
 
                     if (!myPrisoner.activeSelf)
                     {
-                        myPrisoner = FindClosestPrisoner().gameObject;
+                        Prisoner closestPrisoner = FindClosestPrisoner();
+                        if (closestPrisoner)
+                        {
+                            myPrisoner = FindClosestPrisoner().gameObject;
+                        }
+                        else myPrisoner = null;
                     }
 
                     myTarget = myPrisoner;

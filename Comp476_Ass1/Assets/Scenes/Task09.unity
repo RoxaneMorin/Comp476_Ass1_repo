@@ -6980,6 +6980,8 @@ MonoBehaviour:
   heroScoreText: {fileID: 578429504}
   guardianScoreText: {fileID: 236187113}
   timerText: {fileID: 755909263}
+  guardianPrefab: {fileID: 0}
+  heroRespawns: 0
   prisonersInScene: 0
   guardiansInScene: 0
   heroesInScene: 0
@@ -6987,6 +6989,8 @@ MonoBehaviour:
   guardiansKilled: 0
   heroesKilled: 0
   timeElapsed: 0
+  score: 0
+  prisonerNeutralized: 0
 --- !u!1 &856589115
 GameObject:
   m_ObjectHideFlags: 0
@@ -14960,7 +14964,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: THE HERO WINS
+  m_text: THE HEROES WINS
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

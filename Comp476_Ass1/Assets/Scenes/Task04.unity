@@ -246,6 +246,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3fda5988937d3284aa289e1f1a12020c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  myDeathParticleSystem: {fileID: 6015813358376850953, guid: a08961115e592174bbbb458cee4f566a,
+    type: 3}
   maxVelocity: 4
   defaultVelocity: 0
   myTarget: {fileID: 1149951131}
@@ -676,6 +678,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69d543135483e894cac72d93cba0a408, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  killPlayer: 0
 --- !u!136 &285572641
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -1645,6 +1648,8 @@ MonoBehaviour:
   heroScoreText: {fileID: 0}
   guardianScoreText: {fileID: 0}
   timerText: {fileID: 0}
+  guardianPrefab: {fileID: 0}
+  heroRespawns: 0
   prisonersInScene: 0
   guardiansInScene: 0
   heroesInScene: 0
@@ -1652,6 +1657,8 @@ MonoBehaviour:
   guardiansKilled: 0
   heroesKilled: 0
   timeElapsed: 0
+  score: 0
+  prisonerNeutralized: 0
 --- !u!1 &1149951131
 GameObject:
   m_ObjectHideFlags: 0
@@ -1772,6 +1779,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a127811e6fbcf7849ab3e06d88860de8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  myDeathParticleSystem: {fileID: 1939666041920971862, guid: f08d9ebbb00e48747a5a822974ef7d77,
+    type: 3}
   maxVelocity: 8
   defaultVelocity: 0
   myTarget: {fileID: 0}
@@ -1834,6 +1843,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3fda5988937d3284aa289e1f1a12020c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  myDeathParticleSystem: {fileID: 6015813358376850953, guid: a08961115e592174bbbb458cee4f566a,
+    type: 3}
   maxVelocity: 4
   defaultVelocity: 0
   myTarget: {fileID: 1149951131}
@@ -2077,6 +2088,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9c863dd84ff3554b83355791259fa96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  myDeathParticleSystem: {fileID: 4334521299436995257, guid: 0a5f94b837006c0479c8b6370d680e1c,
+    type: 3}
   maxVelocity: 8
   defaultVelocity: 0
   myTarget: {fileID: 1149951131}
@@ -2103,6 +2116,7 @@ MonoBehaviour:
   aheadDivider: 10
   wanderInterval: 1
   wanderDegreesDelta: 180
+  respawns: 0
   huntGuardians: 0
   myFortress: {fileID: 1716375989}
   myFriendPrisoner: {fileID: 0}
@@ -2113,7 +2127,6 @@ MonoBehaviour:
   guardianHuntingVelocity: 3
   guardianTrailingWeightIncrease: 0.5
   tailFeelerLengthDivider: 3
-  tailFeelersNumber: 3
   guardianOnMyTrail: 0
 --- !u!1 &1716375989
 GameObject:
@@ -2518,6 +2531,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69d543135483e894cac72d93cba0a408, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  killPlayer: 0
 --- !u!54 &1845259877
 Rigidbody:
   m_ObjectHideFlags: 0

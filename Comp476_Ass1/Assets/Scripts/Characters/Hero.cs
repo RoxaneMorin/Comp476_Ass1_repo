@@ -52,8 +52,12 @@ public class Hero : NPC
         {
             myFriendPrisoner = FindClosestPrisoner(true);
         }
-        myTarget = myFriendPrisoner.gameObject;
-        myState = HeroStates.ReachPrisoner;
+
+        if (myFriendPrisoner && !MyFriendPrisoner.IsBusy)
+        {
+            myTarget = myFriendPrisoner.gameObject;
+            myState = HeroStates.ReachPrisoner;
+        }
     }
 
     public void FleeGuardian(GameObject targetGuardian)
@@ -441,7 +445,12 @@ public class Hero : NPC
 
     void Update()
     {
-        TryHaste();
-        Move();
+        // Don't move if my target is null.
+        if (myTarget)
+        {
+            TryHaste();
+            Move();
+        }
+        
     }
 }
