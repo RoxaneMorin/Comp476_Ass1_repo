@@ -2,10 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GuardianFoV : MonoBehaviour
+public class FoV : MonoBehaviour
 {
     // VARIABLES
-    [SerializeField] protected Guardian myGuardian; // Probably not necessary as the guardian already receives events.
 
 
 
@@ -20,11 +19,6 @@ public class GuardianFoV : MonoBehaviour
     // METHODS
 
     // Built in.
-    private void Start()
-    {
-        myGuardian = GetComponentInParent<Guardian>();
-    }
-
     private void OnTriggerEnter(Collider other)
     {
         // Debug.Log(string.Format("{0} entered {1}.", other.gameObject, this));

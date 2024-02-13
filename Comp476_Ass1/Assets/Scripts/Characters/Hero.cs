@@ -10,7 +10,8 @@ public class Hero : NPC
         ReachPrisoner,
         ReachFortress,
         FleeGuardian,
-        TauntGuardian
+        TauntGuardian,
+        FleePlayer
     }
 
     // VARIABLES.
@@ -18,8 +19,9 @@ public class Hero : NPC
     [SerializeField] private bool respawns = false;
     public bool Respawns { get { return respawns; } }
     [SerializeField] private bool huntGuardians = true;
-    [SerializeField] protected GameObject myFortress;
-    [SerializeField] protected Prisoner myFriendPrisoner;
+    [SerializeField] private FoV myFoV;
+    [SerializeField] private GameObject myFortress;
+    [SerializeField] private Prisoner myFriendPrisoner;
     public Prisoner MyFriendPrisoner { get { return myFriendPrisoner; } }
     
     [Space]
@@ -158,7 +160,7 @@ public class Hero : NPC
 
         if (potentialGuardianFoVs.Length == 1)
         {
-            GuardianFoV potentialGuardianFoV = potentialGuardianFoVs[0].GetComponent<GuardianFoV>();
+            FoV potentialGuardianFoV = potentialGuardianFoVs[0].GetComponent<FoV>();
             Guardian potentialGuardian = potentialGuardianFoV.GetComponentInParent<Guardian>();
 
             return potentialGuardian;
@@ -333,6 +335,57 @@ public class Hero : NPC
         targetReached = false;
     }
 
+    protected void FoVEntered(GameObject enterer)
+    {
+        if (enterer.CompareTag("Player"))
+        {
+            Debug.Log(string.Format("{0} has sighted a player!", this.gameObject));
+
+            // Save my previous information.
+            previousTarget = myTarget;
+            previousState = myState;
+
+            // Clear waypoint information.
+            ClearWaypointInfo();
+
+            // Update state.
+            myTarget = enterer;
+            myState = HeroStates.FleePlayer;
+        }
+    }
+    protected void FoVExited(GameObject exiter)
+    {
+        if (exiter.CompareTag("Player"))
+        {
+            StartCoroutine(EscapedPlayerDelayed(exiter));
+        }
+            
+    }
+    protected void FoVExitedDelayed(GameObject exiter)
+    {
+        Debug.Log(string.Format("{0} lost sight of the player.", this.gameObject));
+
+        // Save my previous information.
+        GameObject tempTarget = myTarget;
+        HeroStates tempState = myState;
+
+        // Update state.
+        myTarget = previousTarget;
+        myState = previousState;
+
+        // Waypoints, next state, etc. handled in ClearFlee.
+        ClearFlee();
+
+        previousTarget = tempTarget;
+        previousState = tempState;
+    }
+    public IEnumerator EscapedPlayerDelayed(GameObject player)
+    {
+        yield return new WaitForSeconds(stopEscapeTimeBuffer);
+
+        FoVExitedDelayed(player);
+    }
+
     void GuardianDestroyed(GameObject dyingGardianGO)
     {
         // Check if the guardian was in our list of obstacles to be avoided.
@@ -400,7 +453,9 @@ public class Hero : NPC
     {
         gameObject.transform.position = myFortress.transform.position;
         doMovement = true;
+
         ClearFlee();
+        HuntForGuardian(true);
     }
 
     void PrisonerReachedFortress(GameObject dummy)
@@ -418,12 +473,20 @@ public class Hero : NPC
         // Dynamic variables.
         defaultVelocity = maxVelocity;
 
+        // Get components in children.
+        myFoV = GetComponentInChildren<FoV>();
+
         // Register the event listeners.
         OnTargetReached += MyTargetReached;
         Player.OnPlayerCaughtHero += HeroKilledByPlayer;
         HeroKillZone.OnHeroKillZoneEnter += HeroKilledByEnv;
         GuardianKillZone.OnGuardianKillZoneEnter += GuardianDestroyed;
         Fortress.OnPrisonerFortressEnter += PrisonerReachedFortress;
+        if (myFoV)
+        {
+            myFoV.OnFoVEnter += FoVEntered;
+            myFoV.OnFoVExit += FoVExited;
+        }
 
         // Furnish the possible move functions.
         moveFunctionsPerState = new Func<GameObject, Vector3>[]
@@ -432,7 +495,8 @@ public class Hero : NPC
             ArriveSteer,
             SeekSteer,
             SeekSteer,
-            ArriveSteer
+            ArriveSteer,
+            FleeSteer
         };
 
         // Find closest Prisoner.

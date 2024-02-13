@@ -322,7 +322,7 @@ GameObject:
   - component: {fileID: 4160802936916593972}
   m_Layer: 0
   m_Name: Guardian_AvoidMeZone
-  m_TagString: GuardianCaptureZone
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -686,7 +686,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e665413818d9c8144873b6eaaa324d12, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myGuardian: {fileID: 3870521603694614594}
 --- !u!54 &7282716868273048767
 Rigidbody:
   m_ObjectHideFlags: 0

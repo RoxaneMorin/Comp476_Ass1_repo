@@ -15,7 +15,7 @@ public class Guardian : NPC
 
     // VARIABLES
     [Header("Guardian Variables")]
-    [SerializeField] public GuardianFoV myFoV;
+    [SerializeField] public FoV myFoV;
     [SerializeField] protected HeroKillZone myCaptureZone;
     [SerializeField] protected GameObject myPrisoner;
 
@@ -111,8 +111,7 @@ public class Guardian : NPC
         defaultVelocity = maxVelocity;
 
         // Get components in children.
-        myFoV = GetComponentInChildren<GuardianFoV>();
-        //mySneakZone = GetComponentInChildren<GuardianSneakZone>();
+        myFoV = GetComponentInChildren<FoV>();
         myCaptureZone = GetComponentInChildren<HeroKillZone>();
 
         // Register the event listeners.
@@ -120,8 +119,6 @@ public class Guardian : NPC
         OnTargetReached += MyTargetReached;
         myFoV.OnFoVEnter += FoVEntered;
         myFoV.OnFoVExit += FoVExited;
-        //mySneakZone.OnSneakZoneEnter += SneakZoneEntered;
-        //mySneakZone.OnSneakZoneExit += SneakZoneExited;
 
         // Furnish the possible move functions.
         moveFunctionsPerState = new Func<GameObject, Vector3>[]
