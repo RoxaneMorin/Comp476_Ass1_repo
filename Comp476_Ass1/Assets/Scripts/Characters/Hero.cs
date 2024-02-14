@@ -294,8 +294,7 @@ public class Hero : NPC
     protected void Move()
     {
         Vector3 desiredVelocity = moveFunctionsPerState[(int)myState](myTarget);
-
-        Move(desiredVelocity);
+        Move(desiredVelocity, true, (myState != HeroStates.TauntGuardian && myState != HeroStates.FleeGuardian));
     }
 
 

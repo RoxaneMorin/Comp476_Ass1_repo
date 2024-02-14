@@ -73,6 +73,9 @@ public class Prisoner : NPC
     }
 
 
+    // To do: add a check for nearby guardians, which can be consulted by the friend hero.
+
+
     // Event receivers.
     override protected void MyTargetReached(GameObject target)
     {

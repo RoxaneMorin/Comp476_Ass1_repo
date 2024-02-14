@@ -244,7 +244,7 @@ public class NPC : MonoBehaviour
     
     
     // Base Move function.
-    virtual protected void Move(Vector3 desiredVelocity, bool avoidObstacles = true) 
+    virtual protected void Move(Vector3 desiredVelocity, bool avoidObstacles = true, bool considerFoVs = false) 
     {
         if (doMovement)
         {
@@ -253,7 +253,7 @@ public class NPC : MonoBehaviour
             {
                 if (useFeelers)
                 {
-                    CastFeelers();
+                    CastFeelers(considerFoVs);
                     desiredVelocity += AvoidObstacles(toAvoidPassive) * toAvoidPassiveWeight;
                 }
                 desiredVelocity += AvoidObstacles(toAvoidActive) * toAvoidActiveWeight;
@@ -278,7 +278,7 @@ public class NPC : MonoBehaviour
     }
 
     // Obstacle avoidance.
-    protected void CastFeelers() // Replace feelers by colliders if they are too greedy.
+    protected void CastFeelers(bool considerFoVs) // Replace feelers by colliders if they are too greedy.
     {
         // Clear out the previous list of obstacles.
         toAvoidPassive.Clear();
@@ -300,10 +300,9 @@ public class NPC : MonoBehaviour
             Ray ray = new Ray(transform.position, currentDirection);
             RaycastHit hit;
 
-            if (Physics.Raycast(ray, out hit, localFeelerDistance))
+            int layerMask = 1 << 0;
+            if (Physics.Raycast(ray, out hit, localFeelerDistance, layerMask))
             {
-                // TO DO: only register the relevant objects, or sort objects in different categories.
-
                 // The hero doesn't avoid the prisoner; guardians don't avoid the hero.
                 if (!(this.gameObject.CompareTag("Hero") && hit.collider.gameObject.CompareTag("Prisoner")) &&
                     !(this.gameObject.CompareTag("Guardian") && hit.collider.gameObject.CompareTag("Hero")))
@@ -312,6 +311,16 @@ public class NPC : MonoBehaviour
                 }
             }
 
+            // If necessary, do a second round of raycasting in search of FoVs.
+            if (considerFoVs)
+            {
+                layerMask = 1 << 3;
+                if (Physics.Raycast(ray, out hit, localFeelerDistance, layerMask))
+                {
+                    toAvoidPassive.Add(hit.collider.gameObject);
+                }
+            }
+            
             // Visualize their little feelers uwu
             Debug.DrawRay(ray.origin, ray.direction * localFeelerDistance, Color.white);
         }

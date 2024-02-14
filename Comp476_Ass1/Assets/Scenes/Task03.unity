@@ -1592,10 +1592,10 @@ MonoBehaviour:
   useFeelers: 1
   toAvoidPassive: []
   toAvoidActive: []
-  feelersCount: 3
-  feelersAngle: 45
-  feelersDistance: 15
-  shortenFeelersDivision: 2
+  feelersCount: 13
+  feelersAngle: 260
+  feelersDistance: 8
+  shortenFeelersDivision: 3
   useWaypoints: 0
   isCrossing: 0
   previousWaypoint: {fileID: 0}
@@ -1609,13 +1609,14 @@ MonoBehaviour:
   wanderDegreesDelta: 180
   respawns: 0
   huntGuardians: 0
+  myFoV: {fileID: 0}
   myFortress: {fileID: 1716375989}
   myFriendPrisoner: {fileID: 0}
   myState: 0
   previousState: 0
   stopEscapeTimeBuffer: 0.5
   findNewGuardianTimeBuffer: 5
-  guardianHuntingVelocity: 3
+  guardianHuntingVelocity: 8
   guardianTrailingWeightIncrease: 0.5
   tailFeelerLengthDivider: 3
   guardianOnMyTrail: 0
@@ -2007,7 +2008,7 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: c53d37ec27ca9a84aa6ff17bfe065124,
         type: 3}
       propertyPath: m_Layer
-      value: 2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: c53d37ec27ca9a84aa6ff17bfe065124,
         type: 3}
@@ -2077,7 +2078,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e665413818d9c8144873b6eaaa324d12, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myGuardian: {fileID: 56540819}
 --- !u!54 &1979890805
 Rigidbody:
   m_ObjectHideFlags: 0
