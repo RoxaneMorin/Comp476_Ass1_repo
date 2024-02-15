@@ -59,7 +59,7 @@ public class Guardian : NPC
             // Notify the hero it has been seen. 
             Hero perceivedHero = enterer.GetComponent<Hero>();
             if (perceivedHero != null)
-                perceivedHero.FleeGuardian(this.gameObject);
+                perceivedHero.EnterFleeGuardian(this.gameObject);
 
             // Chase the hero.
             previousTarget = myTarget;
@@ -79,7 +79,7 @@ public class Guardian : NPC
             Hero perceivedHero = exiter.GetComponent<Hero>();
             if (perceivedHero != null)
             {
-                perceivedHero.StartCoroutine(perceivedHero.EscapedGuardianDelayed(gameObject));
+                perceivedHero.StartCoroutine(perceivedHero.ExitFleeGuardianDelayed(gameObject));
             }
 
             // Stop chasing the hero.

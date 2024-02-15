@@ -31,6 +31,7 @@ public class Prisoner : NPC
 
     // METHODS
 
+    // State changes.
     public void InitRescue(Hero rescuer, GameObject targetFortress)
     {
         previousTarget = myTarget;
@@ -73,7 +74,20 @@ public class Prisoner : NPC
     }
 
 
-    // To do: add a check for nearby guardians, which can be consulted by the friend hero.
+    // Utility
+    public bool GuardiansNearby(float nearbyRadius)
+    {
+        Collider[] otherColliders = Physics.OverlapSphere(gameObject.transform.position, nearbyRadius);
+
+        foreach (Collider collider in otherColliders)
+        {
+            if (collider.gameObject.CompareTag("Guardian") || collider.gameObject.CompareTag("Player"))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
 
     // Event receivers.

@@ -37,6 +37,7 @@ public class Hero : NPC
     [SerializeField] private float stopEscapeTimeBuffer = 1f;
     [SerializeField] private float findNewGuardianTimeBuffer = 10f;
     [SerializeField] private float guardianHuntingVelocity = 3f;
+    [SerializeField] private float guardiansNearPrisonerRadius = 2.5f;
 
     [Space]
 
@@ -48,6 +49,7 @@ public class Hero : NPC
 
     // METHODS
 
+    // State changes.
     public void InitReachPrisoner()
     {
         if (!myFriendPrisoner || !myFriendPrisoner.isActiveAndEnabled)
@@ -60,9 +62,11 @@ public class Hero : NPC
             myTarget = myFriendPrisoner.gameObject;
             myState = HeroStates.ReachPrisoner;
         }
+
+        // Where to check if the prisoner is surrounded?
     }
 
-    public void FleeGuardian(GameObject targetGuardian)
+    public void EnterFleeGuardian(GameObject targetGuardian)
     {
         Debug.Log(string.Format("{0} is now fleeing the guardian {1}.", this, targetGuardian));
 
@@ -94,7 +98,7 @@ public class Hero : NPC
 
         maxVelocity = guardianHuntingVelocity;
     }
-    public void EscapedGuardian(GameObject targetGuardian)
+    public void ExitFleeGuardian(GameObject targetGuardian)
     {
         Debug.Log(string.Format("{0} is no longer fleeing {1}.", this, targetGuardian));
 
@@ -136,13 +140,68 @@ public class Hero : NPC
         }
     }
 
-    public IEnumerator EscapedGuardianDelayed(GameObject targetGuardian)
+    public IEnumerator ExitFleeGuardianDelayed(GameObject targetGuardian)
     {
         yield return new WaitForSeconds(stopEscapeTimeBuffer);
 
-        EscapedGuardian(targetGuardian);
+        ExitFleeGuardian(targetGuardian);
     }
 
+    public void HuntForGuardian(bool retarget = false)
+    {
+        if (huntGuardians)
+        {
+            Guardian targetGuardian = null;
+            if (myTarget)
+            {
+                targetGuardian = myTarget.GetComponent<Guardian>();
+            }
+
+            if (retarget || targetGuardian == null || !targetGuardian.gameObject.activeInHierarchy)
+            {
+                // Debug.Log(string.Format("{0} is hunting for a Guardian...", gameObject));
+                targetGuardian = FindClosestGuardianByFoV();
+            }
+
+            if (targetGuardian)
+            {
+                Debug.Log(string.Format("{0} is attempting to lure {1} to its doom...", gameObject, targetGuardian.gameObject));
+
+                myState = HeroStates.TauntGuardian;
+                myTarget = targetGuardian.myFoV.gameObject;
+
+                Invoke("HuntForGuardianRetry", findNewGuardianTimeBuffer);
+            }
+            else
+            {
+                // Move on to rescuing the prisoner.
+                InitReachPrisoner();
+            }
+        }
+        else
+        {
+            // Move on to rescuing the prisoner.
+            InitReachPrisoner();
+        }
+
+    }
+    public IEnumerator HuntForGuardianDelayed()
+    {
+        yield return new WaitForSeconds(findNewGuardianTimeBuffer);
+
+        HuntForGuardian(true);
+    }
+    public void HuntForGuardianRetry()
+    {
+        //Debug.Log("In HuntForGuardianRetry.");
+        if (myState == HeroStates.TauntGuardian)
+        {
+            HuntForGuardian(true);
+        }
+    }
+
+
+    // Utility.
     bool GuardiansInToAvoid()
     {
         foreach (GameObject potentialGuardian in toAvoidActive)
@@ -152,6 +211,11 @@ public class Hero : NPC
                 return true;
         }
         return false;
+    }
+
+    bool FriendPrisonerSurrounded()
+    {
+        return myFriendPrisoner.GuardiansNearby(guardiansNearPrisonerRadius);
     }
 
     Guardian FindClosestGuardianByFoV()
@@ -194,59 +258,6 @@ public class Hero : NPC
         }
     }
 
-    public void HuntForGuardian(bool retarget = false)
-    {
-        if (huntGuardians)
-        {
-            Guardian targetGuardian = null;
-            if (myTarget)
-            {
-                targetGuardian = myTarget.GetComponent<Guardian>();
-            }
-
-            if (retarget || targetGuardian == null || !targetGuardian.gameObject.activeInHierarchy)
-            {
-                // Debug.Log(string.Format("{0} is hunting for a Guardian...", gameObject));
-                targetGuardian = FindClosestGuardianByFoV();
-            }
-
-            if (targetGuardian)
-            {
-                Debug.Log(string.Format("{0} is attempting to lure {1} to its doom...", gameObject, targetGuardian.gameObject));
-
-                myState = HeroStates.TauntGuardian;
-                myTarget = targetGuardian.myFoV.gameObject;
-
-                Invoke("HuntForGuardianRetry", findNewGuardianTimeBuffer);
-            }
-            else
-            {
-                // Move on to rescuing the prisoner.
-                InitReachPrisoner();
-            }
-        }
-        else
-        {
-            // Move on to rescuing the prisoner.
-            InitReachPrisoner();
-        }
-        
-    }
-    public IEnumerator HuntForGuardianDelayed()
-    {
-        yield return new WaitForSeconds(findNewGuardianTimeBuffer);
-
-        HuntForGuardian(true);
-    }
-    public void HuntForGuardianRetry()
-    {
-        //Debug.Log("In HuntForGuardianRetry.");
-        if (myState == HeroStates.TauntGuardian)
-        {
-            HuntForGuardian(true);
-        }
-    }
-
     protected bool CastBackFeeler()
     {
         // To do: try to make these a fan.
@@ -270,6 +281,15 @@ public class Hero : NPC
         // else,
         return false;
     }
+
+
+    // Movement
+    protected void Move()
+    {
+        Vector3 desiredVelocity = moveFunctionsPerState[(int)myState](myTarget);
+        Move(desiredVelocity, true, (myState != HeroStates.TauntGuardian && myState != HeroStates.FleeGuardian));
+    }
+
     protected void TryHaste()
     {
         bool isBeingTrailed = CastBackFeeler();
@@ -286,15 +306,6 @@ public class Hero : NPC
             toAvoidActiveWeight -= guardianTrailingWeightIncrease;
             maxVelocity -= guardianTrailingWeightIncrease;
         }
-    }
-
-
-    // Movement
-
-    protected void Move()
-    {
-        Vector3 desiredVelocity = moveFunctionsPerState[(int)myState](myTarget);
-        Move(desiredVelocity, true, (myState != HeroStates.TauntGuardian && myState != HeroStates.FleeGuardian));
     }
 
 
@@ -466,7 +477,6 @@ public class Hero : NPC
 
 
     // Built in.
-
     void Start()
     {
         // Dynamic variables.
