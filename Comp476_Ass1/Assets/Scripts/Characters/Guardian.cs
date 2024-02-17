@@ -52,14 +52,18 @@ public class Guardian : NPC
 
     protected void FoVEntered(GameObject enterer)
     {
+        //Debug.Log(string.Format("{0} has sighted {1}.", this.gameObject, enterer));
+
         if (enterer.CompareTag("Hero"))
         {
-            Debug.Log(string.Format("{0} has sighted a hero!", this.gameObject));
+            Debug.Log(string.Format("{0} has sighted a hero, {1}.", this.gameObject, enterer));
 
             // Notify the hero it has been seen. 
             Hero perceivedHero = enterer.GetComponent<Hero>();
             if (perceivedHero != null)
+            {
                 perceivedHero.EnterFleeGuardian(this.gameObject);
+            }
 
             // Chase the hero.
             previousTarget = myTarget;
@@ -131,7 +135,12 @@ public class Guardian : NPC
 
 
         // Find myPrisoner.
-        myPrisoner = FindClosestPrisoner().gameObject;
+        Prisoner potentialPrisoner = FindClosestPrisoner();
+        if (potentialPrisoner)
+        {
+            myPrisoner = potentialPrisoner.gameObject;
+        }
+        
     }
 
     void Update()
@@ -158,7 +167,7 @@ public class Guardian : NPC
                     myTarget = myPrisoner;
                     myState = GuardianStates.ReachPrisoner;
 
-                    Debug.Log("Prisoner too far!");
+                    // Debug.Log(string.Format("{0}'s prisoner ({1}) is too far away!", gameObject, myPrisoner));
                 }
                 else if (myState == GuardianStates.ReachPrisoner && Vector3.Distance(transform.position, myPrisoner.transform.position) < maxDistanceFromMyPrisoner / 2)
                 {

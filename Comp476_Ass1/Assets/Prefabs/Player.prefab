@@ -238,7 +238,7 @@ CapsuleCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
@@ -289,8 +289,8 @@ MonoBehaviour:
   myRespawnPoint: {fileID: 0}
   myDeathParticleSystem: {fileID: 8679473759837773672, guid: 7f48a0d1f564701428b4307d1d59683c,
     type: 3}
-  accelerationRate: 4
-  maxSpeed: 16
+  accelerationRate: 5
+  maxSpeed: 20
 --- !u!1 &8598180316220395348
 GameObject:
   m_ObjectHideFlags: 0

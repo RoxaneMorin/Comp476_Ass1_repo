@@ -14,11 +14,18 @@ public class Hero : NPC
         FleePlayer
     }
 
+    public enum HeroRelationshipToGuardians
+    {
+        NeverHunt,
+        HuntIfClustered,
+        AlwaysHunt
+    }
+
     // VARIABLES.
     [Header("Hero Variables")]
     [SerializeField] private bool respawns = false;
     public bool Respawns { get { return respawns; } }
-    [SerializeField] private bool huntGuardians = true;
+    [SerializeField] private HeroRelationshipToGuardians guardianHuntingBehaviour = HeroRelationshipToGuardians.AlwaysHunt;
     [SerializeField] private FoV myFoV;
     [SerializeField] private GameObject myFortress;
     [SerializeField] private Prisoner myFriendPrisoner;
@@ -37,7 +44,7 @@ public class Hero : NPC
     [SerializeField] private float stopEscapeTimeBuffer = 1f;
     [SerializeField] private float findNewGuardianTimeBuffer = 10f;
     [SerializeField] private float guardianHuntingVelocity = 3f;
-    [SerializeField] private float guardiansNearPrisonerRadius = 2.5f;
+    [SerializeField] private float guardiansNearPrisonerRadius = 5f;
 
     [Space]
 
@@ -45,14 +52,18 @@ public class Hero : NPC
     [SerializeField] private float tailFeelerLengthDivider = 3f;
     [SerializeField] private bool guardianOnMyTrail = false;
 
+    [Space]
+
+    [SerializeField] private float maintenanceIntervals = 20f;
+
 
 
     // METHODS
 
     // State changes.
-    public void InitReachPrisoner()
+    public void EnterReachPrisoner(bool retarget = false)
     {
-        if (!myFriendPrisoner || !myFriendPrisoner.isActiveAndEnabled)
+        if (retarget || !myFriendPrisoner || !(myFriendPrisoner.isActiveAndEnabled) || myFriendPrisoner.IsBusy)
         {
             myFriendPrisoner = FindClosestPrisoner(true);
         }
@@ -62,26 +73,26 @@ public class Hero : NPC
             myTarget = myFriendPrisoner.gameObject;
             myState = HeroStates.ReachPrisoner;
         }
-
-        // Where to check if the prisoner is surrounded?
+        else // Else, no prisoners are available. Enter taunt guardian.
+        {
+            Guardian potentialClosestGuardian = FindClosestGuardianByFoV();
+            if (potentialClosestGuardian)
+            {
+                EnterTauntGuardianDelayed();
+            }
+        }
     }
 
     public void EnterFleeGuardian(GameObject targetGuardian)
     {
         Debug.Log(string.Format("{0} is now fleeing the guardian {1}.", this, targetGuardian));
 
-        // If we were guiding a prisoner, keep track of it.
-        if (myFriendPrisoner != null)
+        // If we were guiding a prisoner, notify it.
+        if (myFriendPrisoner != null && myFriendPrisoner.isActiveAndEnabled && myFriendPrisoner.MyState == Prisoner.PrisonerStates.ReachFortress)
         {
+
             myFriendPrisoner.StopRescue();
-        }
-        else
-        {
-            Prisoner targetPrisoner = myTarget.GetComponent<Prisoner>();
-            if (targetPrisoner)
-            {
-                myFriendPrisoner = targetPrisoner;
-            }
+            myFriendPrisoner = null;
         }
 
         // Update my own stuff.
@@ -105,7 +116,7 @@ public class Hero : NPC
         GameObject tempTarget = myTarget;
         HeroStates tempState = myState;
 
-        ClearWaypointInfo();
+        //ClearWaypointInfo();
 
         // How to handle them being deleted?
         if (toAvoidActive.Contains(targetGuardian))
@@ -115,28 +126,18 @@ public class Hero : NPC
 
         if (!GuardiansInToAvoid())
         {
-            Debug.Log("No longer fleeing anyone");
-
-            if ((previousState == HeroStates.ReachPrisoner || previousState == HeroStates.ReachFortress) && myFriendPrisoner.isActiveAndEnabled)
-            {
-                InitReachPrisoner();
-            }
-            else if (previousState == HeroStates.FleeGuardian)
-            {
-                // A closer guardian may be present.
-                targetGuardian = null;
-                HuntForGuardian(true);
-            }
-            else
-            {
-                myTarget = previousTarget;
-                myState = previousState;
-            }
+            Debug.Log(string.Format("{0} is no longer fleeing anyone.", this.gameObject));
 
             previousTarget = tempTarget;
             previousState = tempState;
 
             maxVelocity = defaultVelocity;
+
+            AssignHuntOrRescue();
+        }
+        else
+        {
+            Debug.Log(string.Format("{0} is still being pursued.", this.gameObject));
         }
     }
 
@@ -147,61 +148,97 @@ public class Hero : NPC
         ExitFleeGuardian(targetGuardian);
     }
 
-    public void HuntForGuardian(bool retarget = false)
+    public void AssignHuntOrRescue(bool retarget = false)
     {
-        if (huntGuardians)
+        switch (guardianHuntingBehaviour)
         {
-            Guardian targetGuardian = null;
-            if (myTarget)
-            {
-                targetGuardian = myTarget.GetComponent<Guardian>();
-            }
+            case HeroRelationshipToGuardians.NeverHunt:
+                EnterReachPrisoner();
+                break;
 
-            if (retarget || targetGuardian == null || !targetGuardian.gameObject.activeInHierarchy)
-            {
-                // Debug.Log(string.Format("{0} is hunting for a Guardian...", gameObject));
-                targetGuardian = FindClosestGuardianByFoV();
-            }
+            case HeroRelationshipToGuardians.HuntIfClustered:
+                myFriendPrisoner = FindClosestPrisoner(true);
+                if (FriendPrisonerSurrounded())
+                {
+                    Debug.Log(string.Format("{0}'s target, {1}, is surrounded by guardians. They will first try to clean those away...", this.gameObject, myTarget));
+                    EnterTauntGuardian(retarget);
+                }
+                else
+                {
+                    Debug.Log(string.Format("{0} is making a beeline for {1}.", this.gameObject, myFriendPrisoner));
+                    EnterReachPrisoner(false);
+                }
+                break;
 
-            if (targetGuardian)
-            {
-                Debug.Log(string.Format("{0} is attempting to lure {1} to its doom...", gameObject, targetGuardian.gameObject));
-
-                myState = HeroStates.TauntGuardian;
-                myTarget = targetGuardian.myFoV.gameObject;
-
-                Invoke("HuntForGuardianRetry", findNewGuardianTimeBuffer);
-            }
-            else
-            {
-                // Move on to rescuing the prisoner.
-                InitReachPrisoner();
-            }
+            case HeroRelationshipToGuardians.AlwaysHunt:
+                EnterTauntGuardian(retarget);
+                break;
         }
-        else
-        {
-            // Move on to rescuing the prisoner.
-            InitReachPrisoner();
-        }
-
     }
-    public IEnumerator HuntForGuardianDelayed()
+    public IEnumerator AssignHuntOrRescueDelayed(bool retarget = false)
     {
         yield return new WaitForSeconds(findNewGuardianTimeBuffer);
 
-        HuntForGuardian(true);
+        AssignHuntOrRescue(retarget);
     }
-    public void HuntForGuardianRetry()
+    public void RetryAssignHuntOrRescue()
     {
-        //Debug.Log("In HuntForGuardianRetry.");
-        if (myState == HeroStates.TauntGuardian)
+        if (myState == HeroStates.TauntGuardian && myTarget != myFortress)
         {
-            HuntForGuardian(true);
+            AssignHuntOrRescue(true);
+            // EnterTauntGuardian(true);
         }
+    }
+
+    public void EnterTauntGuardian(bool retarget = false)
+    {
+        Guardian targetGuardian = null;
+        if (myTarget)
+        {
+            targetGuardian = myTarget.GetComponent<Guardian>();
+        }
+
+        if (retarget || !targetGuardian || !targetGuardian.gameObject.activeInHierarchy)
+        {
+            targetGuardian = FindClosestGuardianByFoV();
+        }
+
+        if (targetGuardian != null && targetGuardian.isActiveAndEnabled)
+        {
+            Debug.Log(string.Format("{0} is attempting to lure {1} to its doom...", gameObject, targetGuardian.gameObject));
+
+            myState = HeroStates.TauntGuardian;
+            myTarget = targetGuardian.myFoV.gameObject;
+
+            Invoke("RetryAssignHuntOrRescue", findNewGuardianTimeBuffer);
+        }
+        else // No guardians are left. Move on to rescuing the prisoner regardless of state.
+        {
+            Prisoner potentialPrisoner = FindClosestPrisoner();   
+            if (potentialPrisoner)
+            {
+                EnterReachPrisoner();
+            }
+        }
+    }
+    public IEnumerator EnterTauntGuardianDelayed()
+    {
+        yield return new WaitForSeconds(findNewGuardianTimeBuffer);
+
+        EnterTauntGuardian(true);
     }
 
 
     // Utility.
+    bool FriendPrisonerSurrounded()
+    {
+        if (myFriendPrisoner != null && myFriendPrisoner.isActiveAndEnabled)
+        {
+            return myFriendPrisoner.GuardiansNearby(guardiansNearPrisonerRadius, gameObject);
+        }
+        else return false;
+    }
+
     bool GuardiansInToAvoid()
     {
         foreach (GameObject potentialGuardian in toAvoidActive)
@@ -211,11 +248,6 @@ public class Hero : NPC
                 return true;
         }
         return false;
-    }
-
-    bool FriendPrisonerSurrounded()
-    {
-        return myFriendPrisoner.GuardiansNearby(guardiansNearPrisonerRadius);
     }
 
     Guardian FindClosestGuardianByFoV()
@@ -254,28 +286,31 @@ public class Hero : NPC
         {
             targetReached = false;
             ClearWaypointInfo();
-            HuntForGuardian(true);
+            AssignHuntOrRescue(true);
         }
     }
 
     protected bool CastBackFeeler()
     {
-        // To do: try to make these a fan.
-        
         float tailFeelerDistance = feelersDistance / tailFeelerLengthDivider;
-        Ray ray = new Ray(transform.position, -transform.forward);
-        RaycastHit hit;
 
-        // Visualize their little feelers uwu
-        Debug.DrawRay(ray.origin, -transform.forward * (tailFeelerDistance), Color.white);
-
-        if (Physics.Raycast(ray, out hit, tailFeelerDistance))
+        for (int i = 0; i < feelersCount; i++)
         {
-            // Check if the thing hit is a guardian's capture zone.
-            if (hit.collider.gameObject.CompareTag("GuardianCaptureZone"))
+            Vector3 currentDirection = Quaternion.Euler(0, i * 45, 0) * transform.forward;
+            Ray ray = new Ray(transform.position, currentDirection);
+            RaycastHit hit;
+
+            // Visualize their little feelers uwu
+            Debug.DrawRay(ray.origin, currentDirection * (tailFeelerDistance), Color.blue);
+
+            if (Physics.Raycast(ray, out hit, tailFeelerDistance))
             {
-                // Debug.Log(string.Format("A guardian is closely trailing {0}.", gameObject));
-                return true;
+                // Check if the thing hit is a guardian's capture zone.
+                if (hit.collider.gameObject.CompareTag("GuardianCaptureZone"))
+                {
+                    // Debug.Log(string.Format("A guardian is closely trailing {0}.", gameObject));
+                    return true;
+                }
             }
         }
         // else,
@@ -308,13 +343,53 @@ public class Hero : NPC
         }
     }
 
+    IEnumerator DoMaintenance()
+    {
+        while (true)
+        {
+            //Debug.Log(string.Format("{0} doing maintenance.", gameObject));
+
+            // In FoV, but not detected?
+            if (myState == HeroStates.TauntGuardian)
+            {
+                Collider[] colliders = Physics.OverlapSphere(transform.position, 0.5f);
+                foreach (Collider collider in colliders)
+                {
+                    if (collider.gameObject.CompareTag("FoV"))
+                    {
+                        FoV potentialFoV = collider.gameObject.GetComponent<FoV>();
+                        if (potentialFoV && potentialFoV.MyOwner.gameObject.CompareTag("Guardian"))
+                        {
+                            EnterFleeGuardian(potentialFoV.MyOwner.gameObject);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Clear stuck waypoints.
+            if (isCrossing && currentVelocity.magnitude < 0.5f) // Find a better check.
+            {
+                ClearWaypointInfo();
+            }
+
+            // Clear stuck at base.
+            if (myState == HeroStates.ReachFortress && myTarget == myFortress && currentVelocity.magnitude < 0.5f)
+            {
+                AssignHuntOrRescue();
+            }
+
+            yield return new WaitForSeconds(maintenanceIntervals);
+        }
+    }
+
 
     // Event receivers.
     override protected void MyTargetReached(GameObject target)
     {
         // base.MyTargetReached(target);
 
-        Debug.Log(string.Format("The hero reached its target, {0}.", target));
+        //Debug.Log(string.Format("{0} reached its target, {1}.", gameObject, target));
 
         // Have we reached a prisoner?
         if (target.CompareTag("Prisoner"))
@@ -338,18 +413,27 @@ public class Hero : NPC
         }
         if (target.CompareTag("Fortress") && myState == HeroStates.ReachFortress)
         {
-            myState = HeroStates.TauntGuardian;
-            HuntForGuardian(true);
+            AssignHuntOrRescueDelayed(true);
         }
-
-        targetReached = false;
+        else
+        {
+            targetReached = false;
+        }
     }
 
-    protected void FoVEntered(GameObject enterer)
+    protected void PlayerFoVEntered(GameObject enterer)
     {
         if (enterer.CompareTag("Player"))
         {
             Debug.Log(string.Format("{0} has sighted a player!", this.gameObject));
+
+            // If we were guiding a prisoner, notify it.
+            if (myFriendPrisoner != null && myFriendPrisoner.isActiveAndEnabled && myFriendPrisoner.MyState == Prisoner.PrisonerStates.ReachFortress)
+            {
+
+                myFriendPrisoner.StopRescue();
+                myFriendPrisoner = null;
+            }
 
             // Save my previous information.
             previousTarget = myTarget;
@@ -363,7 +447,7 @@ public class Hero : NPC
             myState = HeroStates.FleePlayer;
         }
     }
-    protected void FoVExited(GameObject exiter)
+    protected void PlayerFoVExited(GameObject exiter)
     {
         if (exiter.CompareTag("Player"))
         {
@@ -371,7 +455,7 @@ public class Hero : NPC
         }
             
     }
-    protected void FoVExitedDelayed(GameObject exiter)
+    protected void PlayerFoVExitedDelayed(GameObject exiter)
     {
         Debug.Log(string.Format("{0} lost sight of the player.", this.gameObject));
 
@@ -384,16 +468,16 @@ public class Hero : NPC
         myState = previousState;
 
         // Waypoints, next state, etc. handled in ClearFlee.
-        ClearFlee();
+        ClearFlee(false);
 
         previousTarget = tempTarget;
         previousState = tempState;
     }
     public IEnumerator EscapedPlayerDelayed(GameObject player)
     {
-        yield return new WaitForSeconds(stopEscapeTimeBuffer);
+        yield return new WaitForSeconds(stopEscapeTimeBuffer * 2);
 
-        FoVExitedDelayed(player);
+        PlayerFoVExitedDelayed(player);
     }
 
     void GuardianDestroyed(GameObject dyingGardianGO)
@@ -403,13 +487,12 @@ public class Hero : NPC
         {
             toAvoidActive.Remove(dyingGardianGO);
 
-            // Verify this works with multiple guardians.
-            if (myState == HeroStates.FleeGuardian || myState == HeroStates.TauntGuardian)
+            if (!GuardiansInToAvoid() && (myState == HeroStates.FleeGuardian || myState == HeroStates.ReachFortress))
             {
                 targetReached = false;
                 maxVelocity = defaultVelocity;
 
-                StartCoroutine(HuntForGuardianDelayed());
+                AssignHuntOrRescueDelayed(true);
             }
         }
     }
@@ -421,6 +504,7 @@ public class Hero : NPC
             if (myFriendPrisoner != null)
             {
                 myFriendPrisoner.StopRescue();
+                myFriendPrisoner = null;
             }
 
             if (respawns)
@@ -443,6 +527,7 @@ public class Hero : NPC
             if (myFriendPrisoner != null)
             {
                 myFriendPrisoner.StopRescue();
+                myFriendPrisoner = null;
             }
             // Might need to handle the prisoner differently.
 
@@ -465,14 +550,16 @@ public class Hero : NPC
         doMovement = true;
 
         ClearFlee();
-        HuntForGuardian(true);
+        AssignHuntOrRescue(true);
     }
 
-    void PrisonerReachedFortress(GameObject dummy)
+    void PrisonerReachedFortress(GameObject prisonerGO)
     {
-        // huntGuardians = true;
-        myState = HeroStates.TauntGuardian;
-        HuntForGuardian(true);
+        Prisoner potentialPrisoner = prisonerGO.GetComponent<Prisoner>();
+        if (potentialPrisoner == myFriendPrisoner && myState == HeroStates.ReachFortress)
+        {
+            AssignHuntOrRescue(true);
+        }
     }
 
 
@@ -486,15 +573,15 @@ public class Hero : NPC
         myFoV = GetComponentInChildren<FoV>();
 
         // Register the event listeners.
-        OnTargetReached += MyTargetReached;
+        this.OnTargetReached += MyTargetReached;
         Player.OnPlayerCaughtHero += HeroKilledByPlayer;
         HeroKillZone.OnHeroKillZoneEnter += HeroKilledByEnv;
         GuardianKillZone.OnGuardianKillZoneEnter += GuardianDestroyed;
         Fortress.OnPrisonerFortressEnter += PrisonerReachedFortress;
         if (myFoV)
         {
-            myFoV.OnFoVEnter += FoVEntered;
-            myFoV.OnFoVExit += FoVExited;
+            myFoV.OnFoVEnter += PlayerFoVEntered;
+            myFoV.OnFoVExit += PlayerFoVExited;
         }
 
         // Furnish the possible move functions.
@@ -508,12 +595,11 @@ public class Hero : NPC
             FleeSteer
         };
 
-        // Find closest Prisoner.
+        // Find target prisoner, see if we need to hunt guardians before rescuing it.
         myFriendPrisoner = FindClosestPrisoner(true);
+        AssignHuntOrRescue(true);
 
-        // Find closest Guardian.
-        myState = HeroStates.TauntGuardian;
-        HuntForGuardian(true);
+        StartCoroutine(DoMaintenance());
     }
 
     void Update()

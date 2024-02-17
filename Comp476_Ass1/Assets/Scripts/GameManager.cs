@@ -15,7 +15,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject guardianPrefab;
 
     [Header("Level Param")]
-    [SerializeField] private bool heroRespawns;
+    [SerializeField] private bool vsPlayer;
 
     [Header("Counters")]
     [SerializeField] private int prisonersInScene;
@@ -68,7 +68,7 @@ public class GameManager : MonoBehaviour
         guardiansKilled += 1;
         UpdateScoreText();
 
-        // check for victory if needed
+        CheckForVictory();
     }
     void UpdateHeroesKilled(GameObject potentialHeroSO, bool killForever)
     {
@@ -92,6 +92,8 @@ public class GameManager : MonoBehaviour
             }
             UpdateScoreText();
         }
+
+        CheckForVictory();
     }
     void UpdateHeroesKilled(GameObject potentialHeroSO)
     {
@@ -103,16 +105,15 @@ public class GameManager : MonoBehaviour
                 UpdateHeroesKilled();
             }
         }
+
+        CheckForVictory();
     }
     void UpdateHeroesKilled()
     {
         heroesKilled += 1;
         UpdateScoreText();
 
-        if (heroesKilled == heroesInScene)
-        {
-            DoGuardianVictory();
-        }
+        CheckForVictory();
     }
     void UpdatePrisonersRescued(GameObject dummy)
     {
@@ -120,10 +121,7 @@ public class GameManager : MonoBehaviour
         score += 25;
         UpdateScoreText();
 
-        if (prisonersRescued == prisonersInScene)
-        {
-            DoHeroVictory();
-        }
+        CheckForVictory();
     }
     void UpdateScoreText()
     {
@@ -135,6 +133,36 @@ public class GameManager : MonoBehaviour
         {
             guardianScoreText.text = (string.Format("Guardians' Score:\n{0:D2}/{1:D2} Heroes Killed\n{2:D2}/{3:D2} Prisoners Locked", heroesKilled, heroesInScene, prisonerNeutralized, prisonersInScene));
             // To do: add untouchable prisoner count.
+        }
+    }
+
+    void CheckForVictory()
+    {
+        Debug.Log(string.Format("Prisoners rescued = {0}", prisonersRescued)) ;
+        Debug.Log(string.Format("Prisoners locked = {0}", prisonerNeutralized)) ;
+
+        if (heroesKilled == heroesInScene)
+        {
+            DoGuardianVictory();
+        }
+
+        if (vsPlayer)
+        {
+            if (prisonerNeutralized >= 3)
+            {
+                DoGuardianVictory();
+            }
+            else if (prisonersRescued >= 3)
+            {
+                DoHeroVictory();
+            }
+        }
+        else
+        {
+            if (prisonersRescued == prisonersInScene)
+            {
+                DoHeroVictory();
+            }
         }
     }
 

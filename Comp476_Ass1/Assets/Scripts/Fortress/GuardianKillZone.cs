@@ -61,13 +61,19 @@ public class GuardianKillZone : MonoBehaviour
         {
             enteringHero.TargetReached = true;
         }
+
+        Prisoner enteringPrisoner = other.gameObject.GetComponent<Prisoner>();
+        if (enteringPrisoner)
+        {
+            enteringPrisoner.myTarget = myFortress.gameObject;
+        }
     }
     private void OnTriggerExit(Collider other)
     {
         Hero exitingHero = other.gameObject.GetComponent<Hero>();
         if (exitingHero)
         {
-            Debug.Log("A hero is exiting the base's surroundings.");
+            // Debug.Log("A hero is exiting the base's surroundings.");
             exitingHero.TargetReached = false;
         }
     }

@@ -126,8 +126,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   myDeathParticleSystem: {fileID: 6015813358376850953, guid: a08961115e592174bbbb458cee4f566a,
     type: 3}
-  maxVelocity: 4
-  defaultVelocity: 0
+  maxVelocity: 10
   myTarget: {fileID: 0}
   previousTarget: {fileID: 0}
   targetReached: 0
@@ -137,7 +136,7 @@ MonoBehaviour:
   useFeelers: 1
   toAvoidPassive: []
   toAvoidActive: []
-  feelersCount: 13
+  feelersCount: 19
   feelersAngle: 320
   feelersDistance: 5
   shortenFeelersDivision: 4

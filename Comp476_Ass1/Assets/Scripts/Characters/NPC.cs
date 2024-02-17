@@ -15,7 +15,7 @@ public class NPC : MonoBehaviour
     protected bool doMovement = true;
     public bool DoMovement { get; set; }
     [SerializeField] protected float maxVelocity = 6f;
-    [SerializeField] protected float defaultVelocity;
+    protected float defaultVelocity;
     protected Vector3 currentVelocity;
     public Vector3 CurrentVelocity { get { return currentVelocity; } }
 
@@ -127,9 +127,9 @@ public class NPC : MonoBehaviour
         // Notify that the target has been reached. Only used for state change events.
         if (!targetReached & (desiredVelocity.magnitude <= seekStopRadius))
         {
-            Debug.Log(string.Format("{0} has reached {1}.", gameObject, target));
+            //Debug.Log(string.Format("{0} has reached {1}.", gameObject, target));
             
-            targetReached = true;
+            //targetReached = true;
             OnTargetReached?.Invoke(target);
         }
 
@@ -173,7 +173,7 @@ public class NPC : MonoBehaviour
             // Notify that the target has been reached.
             if (!targetReached)
             {
-                targetReached = true;
+                //targetReached = true;
                 OnTargetReached?.Invoke(target);
             }
         }
@@ -371,7 +371,10 @@ public class NPC : MonoBehaviour
                     }
                 }
             }
-            return closestPotentialPrisoner.GetComponent<Prisoner>();
+            if (closestPotentialPrisoner)
+            {
+                return closestPotentialPrisoner.GetComponent<Prisoner>();
+            }
         }
         return null;
     }
@@ -380,7 +383,7 @@ public class NPC : MonoBehaviour
     // Event handlers.
     virtual protected void MyTargetReached(GameObject target)
     {
-        Debug.Log(string.Format("{0} has reached its target, {1}.", this, target));
+        //Debug.Log(string.Format("{0} has reached its target, {1}.", this, target));
     }
 
 

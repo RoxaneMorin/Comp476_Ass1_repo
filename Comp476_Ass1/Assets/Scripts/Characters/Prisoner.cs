@@ -16,6 +16,7 @@ public class Prisoner : NPC
     [Space]
     [Header("Prisoner Variables")]
     [SerializeField] protected Hero myFriendHero;
+    [SerializeField] protected Player myFriendPlayer;
 
     [Space]
 
@@ -34,22 +35,32 @@ public class Prisoner : NPC
     // State changes.
     public void InitRescue(Hero rescuer, GameObject targetFortress)
     {
-        previousTarget = myTarget;
-        previousState = myState;
+        if (myFriendPlayer == null)
+        {
+            Debug.Log(string.Format("{0} is being rescued by {1}.", gameObject, rescuer.gameObject));
 
-        myFriendHero = rescuer;
-        myTarget = myFriendHero.gameObject;
-        myState = Prisoner.PrisonerStates.ReachFortress;
-        isBusy = true;
+            previousTarget = myTarget;
+            previousState = myState;
+
+            myFriendHero = rescuer;
+            myTarget = myFriendHero.gameObject;
+            myState = Prisoner.PrisonerStates.ReachFortress;
+            isBusy = true;
+        }
     }
     public void StopRescue()
     {
-        previousTarget = myTarget;
-        previousState = myState;
+        if (myFriendPlayer == null)
+        {
+            Debug.Log(string.Format("{0} is no longer being rescue.", gameObject));
 
-        myFriendHero = null;
-        myState = PrisonerStates.Wait;
-        isBusy = false;
+            previousTarget = myTarget;
+            previousState = myState;
+
+            myFriendHero = null;
+            myState = PrisonerStates.Wait;
+            isBusy = false;
+        }
     }
 
     public void InitFollowPlayer(GameObject thePlayer)
@@ -60,6 +71,7 @@ public class Prisoner : NPC
 
         isBusy = true;
         myTarget = thePlayer;
+        myFriendPlayer = thePlayer.GetComponent<Player>();
         myState = PrisonerStates.FollowPlayer;
     }
 
@@ -75,17 +87,35 @@ public class Prisoner : NPC
 
 
     // Utility
-    public bool GuardiansNearby(float nearbyRadius)
+    public bool GuardiansNearby(float nearbyRadius, GameObject hero)
     {
+        // Spherecast around the prisoner.
         Collider[] otherColliders = Physics.OverlapSphere(gameObject.transform.position, nearbyRadius);
+        //Debug.DrawWireSphere(transform.position, nearbyRadius);
 
         foreach (Collider collider in otherColliders)
         {
-            if (collider.gameObject.CompareTag("Guardian") || collider.gameObject.CompareTag("Player"))
+            if (collider.gameObject.CompareTag("Guardian") || collider.gameObject.CompareTag("Player") || collider.gameObject.CompareTag("FoV"))
             {
                 return true;
             }
         }
+
+        // Raycast between hero and prisoner.
+        Ray ray = new Ray(transform.position, hero.transform.position - transform.position);
+        float maxDistance = Vector3.Distance(transform.position, hero.transform.position);
+        RaycastHit[] hits = Physics.RaycastAll(ray, maxDistance);
+        Debug.DrawRay(transform.position, hero.transform.position);
+
+        foreach (RaycastHit hit in hits)
+        {
+            //Debug.Log(hit.collider.gameObject);
+            if (hit.collider.gameObject.CompareTag("Guardian") || hit.collider.gameObject.CompareTag("Player") || hit.collider.gameObject.CompareTag("FoV"))
+            {
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -93,7 +123,13 @@ public class Prisoner : NPC
     // Event receivers.
     override protected void MyTargetReached(GameObject target)
     {
-        base.MyTargetReached(target);
+        // base.MyTargetReached(target);
+        //targetReached = true;
+
+        if (target.CompareTag("Fortress") && myFriendHero)
+        {
+            myFriendHero.TargetReached = false;
+        }
     }
 
 
@@ -104,7 +140,7 @@ public class Prisoner : NPC
         defaultVelocity = maxVelocity;
 
         // Register the event listeners.
-        OnTargetReached += MyTargetReached;
+        this.OnTargetReached += MyTargetReached;
 
         // Furnish the possible move functions.
         moveFunctionsPerState = new Func<GameObject, Vector3>[]
@@ -118,7 +154,7 @@ public class Prisoner : NPC
 
     void Update()
     {
-        if (myState != PrisonerStates.Wait)
+        if (myState != PrisonerStates.Wait && !targetReached)
         {
             Move();
         }

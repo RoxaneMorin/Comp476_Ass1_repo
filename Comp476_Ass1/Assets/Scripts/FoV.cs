@@ -5,6 +5,8 @@ using UnityEngine;
 public class FoV : MonoBehaviour
 {
     // VARIABLES
+    private NPC myOwner;
+    public NPC MyOwner { get { return myOwner; } }
 
 
 
@@ -19,6 +21,11 @@ public class FoV : MonoBehaviour
     // METHODS
 
     // Built in.
+    private void Start()
+    {
+        myOwner = GetComponentInParent<NPC>();
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         // Debug.Log(string.Format("{0} entered {1}.", other.gameObject, this));

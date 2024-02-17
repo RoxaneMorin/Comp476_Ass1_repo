@@ -125,8 +125,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   myDeathParticleSystem: {fileID: 4334521299436995257, guid: 0a5f94b837006c0479c8b6370d680e1c,
     type: 3}
-  maxVelocity: 8
-  defaultVelocity: 8
+  maxVelocity: 20
   myTarget: {fileID: 0}
   previousTarget: {fileID: 0}
   targetReached: 0
@@ -137,33 +136,36 @@ MonoBehaviour:
   toAvoidPassive:
   - {fileID: 0}
   toAvoidActive: []
-  feelersCount: 13
+  feelersCount: 19
   feelersAngle: 320
   feelersDistance: 6
-  shortenFeelersDivision: 3
+  shortenFeelersDivision: 4
   useWaypoints: 1
   isCrossing: 0
   previousWaypoint: {fileID: 0}
   nextWaypoint: {fileID: 0}
   YOnly: 1
   seekStopRadius: 1
-  arriveStopRadius: 3
-  arriveSlowRadius: 4
+  arriveStopRadius: 5
+  arriveSlowRadius: 15
   aheadDivider: 10
   wanderInterval: 1
   wanderDegreesDelta: 180
   respawns: 0
-  huntGuardians: 1
+  guardianHuntingBehaviour: 2
+  myFoV: {fileID: 0}
   myFortress: {fileID: 0}
   myFriendPrisoner: {fileID: 0}
   myState: 3
   previousState: 0
   stopEscapeTimeBuffer: 0.5
   findNewGuardianTimeBuffer: 5
-  guardianHuntingVelocity: 3
+  guardianHuntingVelocity: 8.5
+  guardiansNearPrisonerRadius: 10
   guardianTrailingWeightIncrease: 0.5
   tailFeelerLengthDivider: 3
   guardianOnMyTrail: 0
+  maintenanceIntervals: 20
 --- !u!1001 &925735740841765430
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -314,7 +316,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: c53d37ec27ca9a84aa6ff17bfe065124,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c53d37ec27ca9a84aa6ff17bfe065124,
         type: 3}

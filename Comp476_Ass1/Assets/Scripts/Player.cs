@@ -17,6 +17,9 @@ public class Player : MonoBehaviour
     [SerializeField] private float maxSpeed = 16f;
     private float currentSpeed = 0f;
     private Vector3 currentVelocity;
+    [SerializeField] private float bounceDivider = 2f;
+    private bool isBouncing = false;
+    private Vector3 bounce;
 
 
 
@@ -56,7 +59,18 @@ public class Player : MonoBehaviour
     }
     private void Move(Vector3 inputDir)
     {
-        if (doMovement && inputDir != Vector3.zero)
+        if (isBouncing)
+        {
+            Vector3 timedBounce = bounce * Time.deltaTime;
+            transform.Translate(timedBounce / bounceDivider);
+            bounce -= timedBounce * bounceDivider;
+
+            if (bounce.magnitude < 1f)
+            {
+                isBouncing = false;
+            }
+        }
+        else if (doMovement && inputDir != Vector3.zero)
         {
             // Move the character
             currentSpeed += accelerationRate * Time.deltaTime;
@@ -75,18 +89,36 @@ public class Player : MonoBehaviour
     // Built in.
     private void OnTriggerEnter(Collider other)
     {
+        // Catch heroes.
         if (other.gameObject.CompareTag("Hero"))
         {
             Hero potentialHero = other.gameObject.GetComponent<Hero>();
 
             if (potentialHero)
             {
+                Prisoner potentialPrisoner = potentialHero.MyFriendPrisoner;
+                bool wasRescuingPrisoner = potentialHero.MyState == Hero.HeroStates.ReachFortress;
+
                 // If the hero is currently rescuing the prisoner, kill them forever.
-                OnPlayerCaughtHero?.Invoke(other.gameObject, potentialHero.MyState == Hero.HeroStates.ReachFortress);
+                OnPlayerCaughtHero?.Invoke(other.gameObject, wasRescuingPrisoner);
 
                 // Hijack their prisoner.
-                potentialHero.MyFriendPrisoner.InitFollowPlayer(gameObject);
+                if (potentialPrisoner && wasRescuingPrisoner)
+                {
+                    potentialPrisoner.InitFollowPlayer(gameObject);
+                }
             }
+        }
+
+        // Bounce back against obstacles.
+        if (other.gameObject.CompareTag("Obstacle"))
+        {
+            //Debug.Log(string.Format("The player hit an obstacle {0}.", other.gameObject));
+
+            bounce = -currentVelocity;
+            bounce.y = 0f;
+
+            isBouncing = true;
         }
     }
     void Start()

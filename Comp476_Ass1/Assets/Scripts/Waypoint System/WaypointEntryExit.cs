@@ -21,7 +21,7 @@ public class WaypointEntryExit : Waypoint
 
         if (NPCsTarget != null)
         {
-            Debug.Log(string.Format("{0} following the target {1}", sourceNPC, NPCsTarget));
+            //Debug.Log(string.Format("{0} following the target {1}", sourceNPC, NPCsTarget));
 
             if (sourceNPC.gameObject.CompareTag("Guardian"))
             {
@@ -29,7 +29,7 @@ public class WaypointEntryExit : Waypoint
                 if (targetOfNPCsTarget && targetOfNPCsTarget.myTarget)
                 {
                     NPCsTarget = targetOfNPCsTarget.myTarget;
-                    Debug.Log(string.Format("{0}'s own target is {1}", targetOfNPCsTarget, NPCsTarget));
+                    //Debug.Log(string.Format("{0}'s own target is {1}", targetOfNPCsTarget, NPCsTarget));
                 }
             }
 
@@ -64,7 +64,7 @@ public class WaypointEntryExit : Waypoint
                 // To do: handle chasing Guardians.
                 if (IsBewtweenNPCAndTarget(potentialNPC) && !potentialNPC.isCrossing)
                 {
-                    Debug.Log(string.Format("A wall area separates {0} from its target {1}.", otherGameObject, potentialNPC.myTarget));
+                    //Debug.Log(string.Format("A wall area separates {0} from its target {1}.", otherGameObject, potentialNPC.myTarget));
 
                     potentialNPC.nextWaypoint = nextWaypointUp ? nextWaypointUp : nextWaypointDown;
                     potentialNPC.previousWaypoint = this;
@@ -75,7 +75,7 @@ public class WaypointEntryExit : Waypoint
                     // Clear variables as we are done crossing.
                     potentialNPC.ClearWaypointInfo();
 
-                    Debug.Log(string.Format("{0} is done crossing the wall zone.", otherGameObject));
+                    //Debug.Log(string.Format("{0} is done crossing the wall zone.", otherGameObject));
                 }
             }
         }
