@@ -2573,7 +2573,7 @@ PrefabInstance:
     - target: {fileID: 5379897677598999739, guid: 228c9ac4bec08e842abc3746efc45fbd,
         type: 3}
       propertyPath: guardianHuntingBehaviour
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 5379897677598999739, guid: 228c9ac4bec08e842abc3746efc45fbd,
         type: 3}
